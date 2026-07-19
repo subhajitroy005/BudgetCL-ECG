@@ -210,7 +210,7 @@ each contrast patient-wise (Table~\ref{tab:causal_contrasts}). The plasticity
 contrast is solid: B4$-$B2 gives $+0.030$ with a 95\% interval of
 $[+0.007,+0.063]$ excluding zero, Wilcoxon $p = 0.005$, rank-biserial $0.74$, and
 16 of 21 patients improved against 4 worsened. \textbf{The replay contrast is
-not.} B4$-$B3 has a mean of $+0.047$ but a \emph{median of exactly zero}, an
+not.} B4$-$B3 has a mean of $+0.048$ but a \emph{median of exactly zero}, an
 interval $[-0.006,+0.112]$ that includes zero, $p = 0.473$, and a 10/11 split
 between patients helped and harmed --- marginally more patients are \emph{worse}
 with replay added than better. Its mean is carried by a handful of patients with
@@ -717,8 +717,10 @@ On SVDB it rises from $0.384$ to $0.580$/$0.610$/$0.626$
 ($+0.196$/$+0.226$/$+0.242$), with 45--46 of 46 subjects improved and intervals
 excluding zero (Table~\ref{tab:e13_crossdb}, Fig.~\ref{fig:crossdb}). Two
 observations matter. First, the replay--plasticity ordering \emph{reproduces
-externally and with a larger margin} than on DS2: encoder LoRA beats maximum
-head-only replay by $+0.023$ on INCART and $+0.029$ on SVDB. Second, dropping
+externally and with a larger margin} than on DS2: encoder LoRA has a higher mean
+than maximum head-only replay by $+0.023$ on INCART and $+0.029$ on SVDB. No
+paired direct-comparison interval is reported for either external subset, so
+these are mean differences and not a claim of statistical superiority. Second, dropping
 replay entirely yields the \emph{largest} external target gain but also the most
 source-domain change ($-0.11$ on INCART, $-0.14$ on SVDB, versus $\le -0.07$ with
 replay), a textbook stability--plasticity trade-off: under strong domain shift,

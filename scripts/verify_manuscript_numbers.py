@@ -148,6 +148,35 @@ def verify_prose_matches_tables(tex: dict[str, str]) -> None:
         )
 
 
+def verify_tost_count(tex: dict[str, str]) -> None:
+    """The "N of 18" claim must equal the equivalence count in the TOST CSV.
+
+    The generated table and the prose previously disagreed: one table cell
+    marked rank-2 encoder LoRA at 32 KiB as NOT equivalent because its Wilcoxon
+    p was significant. Significance and equivalence are different questions --
+    that contrast is both significantly different from zero AND equivalent
+    within the margin -- so the table said 13 while the CSV and prose said 14.
+    """
+    rows = read_csv("results/budget_sweep/E10_tost.csv")
+    if not rows:
+        WARN.append("E10_tost.csv missing; skipping TOST count check")
+        return
+    n_equiv = sum(1 for r in rows if r["equivalent_at_margin"].strip().lower() == "true")
+    body = "\n".join(tex.values())
+    check(
+        f"{n_equiv} of {len(rows)}" in body,
+        f"manuscript states '{n_equiv} of {len(rows)}' TOST equivalences, matching the CSV",
+    )
+    table = tex.get("table_e10_paired.tex", "")
+    yes = table.count("& yes \\\\")
+    no = table.count("& no \\\\")
+    check(
+        yes == n_equiv and no == len(rows) - n_equiv,
+        f"TOST table has {yes} yes / {no} no cells, matching the CSV "
+        f"({n_equiv} / {len(rows) - n_equiv})",
+    )
+
+
 def verify_byte_totals(tex: dict[str, str]) -> None:
     """Replay counts and byte totals must match the solver, not a transcript."""
     table = tex.get("table_arm_budget.tex", "")
@@ -206,6 +235,7 @@ def main() -> int:
     verify_arm_means(tex)
     verify_paired_tests(tex)
     verify_prose_matches_tables(tex)
+    verify_tost_count(tex)
     verify_byte_totals(tex)
     verify_splitfirst(tex)
     verify_forbidden(tex)

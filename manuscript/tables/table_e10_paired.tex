@@ -1,48 +1,41 @@
+% GENERATED FILE -- do not edit by hand.
+% Regenerate with: make tables  (scripts/make_tables.py)
 \begin{table}[H]
 \centering
 \small
-\caption{Paired budget contrasts within the Adam rank-1/rank-2 sweep (E10).
-Optimizer, trainable scope, rank, and replay location are held fixed and only the
-budget varies, so each row is a paired comparison over the same 12 records of the
-secondary panel (3 seeds, Adam only). $\Delta$ is the mean paired change in per-patient \macrof{} relative to
-the same configuration at 8\,KiB. ``Equiv.'' is a TOST equivalence decision at
-the pre-stated margin $\delta = 0.05$. Raising the budget is never significantly
-beneficial; for rank-2 encoder LoRA it is significantly harmful.}
+\caption{Paired budget contrasts within the Adam rank-1/rank-2 sweep (E10). Optimizer, trainable scope, rank, and replay location are held fixed and only the budget varies, so each row is a paired comparison over the same 12 records of the secondary panel (3 seeds, Adam only). $\Delta$ is the mean paired change in per-patient \macrof{} relative to the same configuration at 8\,KiB. ``Equiv.'' is a TOST equivalence decision at the pre-stated margin $\delta = 0.05$. 14 of 18 contrasts are equivalent. Raising the budget is never significantly beneficial; for rank-2 encoder LoRA at 64\,KiB it is significantly harmful.}
 \label{tab:e10_paired}
 \setlength{\tabcolsep}{5pt}
 \begin{tabular}{llcrrcc}
 \toprule
 Scope & Replay & Rank & Budget & $\Delta$ vs.\ 8\,KiB & Wilcoxon $p$ & Equiv. \\
 \midrule
-\multirow{3}{*}{Encoder LoRA} & \multirow{3}{*}{raw} & \multirow{3}{*}{1}
- & 16\,KiB & $+0.015$ & $0.204$ & yes \\
+\multirow{3}{*}{Encoder LoRA} & \multirow{3}{*}{raw} & \multirow{3}{*}{1} & 16\,KiB & $+0.015$ & $0.204$ & yes \\
  & & & 32\,KiB & $+0.007$ & $0.424$ & yes \\
  & & & 64\,KiB & $+0.002$ & $0.380$ & yes \\
 \midrule
-\multirow{3}{*}{Encoder LoRA} & \multirow{3}{*}{raw} & \multirow{3}{*}{2}
- & 16\,KiB & $-0.013$ & $0.164$ & yes \\
- & & & 32\,KiB & $-0.027$ & $\mathbf{0.027}$ & no \\
+\multirow{3}{*}{Encoder LoRA} & \multirow{3}{*}{raw} & \multirow{3}{*}{2} & 16\,KiB & $-0.013$ & $0.164$ & yes \\
+ & & & 32\,KiB & $-0.027$ & $\mathbf{0.027}$ & yes \\
  & & & 64\,KiB & $-0.039$ & $\mathbf{0.003}$ & no \\
 \midrule
-\multirow{3}{*}{Head only} & \multirow{3}{*}{post-pool} & \multirow{3}{*}{0}
- & 16\,KiB & $+0.006$ & $0.577$ & yes \\
+\multirow{3}{*}{Head only} & \multirow{3}{*}{post-pool} & \multirow{3}{*}{0} & 16\,KiB & $+0.006$ & $0.577$ & yes \\
  & & & 32\,KiB & $+0.004$ & $0.898$ & yes \\
  & & & 64\,KiB & $+0.003$ & $0.831$ & yes \\
 \midrule
-\multirow{3}{*}{Head only} & \multirow{3}{*}{raw} & \multirow{3}{*}{0}
- & 16\,KiB & $+0.000$ & $0.519$ & yes \\
+\multirow{3}{*}{Head only} & \multirow{3}{*}{raw} & \multirow{3}{*}{0} & 16\,KiB & $+0.000$ & $0.519$ & yes \\
  & & & 32\,KiB & $-0.004$ & $0.677$ & yes \\
  & & & 64\,KiB & $+0.010$ & $0.776$ & no \\
 \midrule
-\multirow{3}{*}{Post-pool adapter} & \multirow{3}{*}{post-pool} & \multirow{3}{*}{1}
- & 16\,KiB & $+0.016$ & $0.240$ & yes \\
- & & & 32\,KiB & $+0.030$ & $0.520$ & no \\
+\multirow{3}{*}{Post-pool adapter} & \multirow{3}{*}{post-pool} & \multirow{3}{*}{1} & 16\,KiB & $+0.016$ & $0.240$ & yes \\
+ & & & 32\,KiB & $+0.030$ & $0.519$ & no \\
  & & & 64\,KiB & $+0.017$ & $0.831$ & no \\
 \midrule
-\multirow{3}{*}{Post-pool adapter} & \multirow{3}{*}{post-pool} & \multirow{3}{*}{2}
- & 16\,KiB & $-0.001$ & $1.000$ & yes \\
- & & & 32\,KiB & $+0.007$ & $0.520$ & yes \\
+\multirow{3}{*}{Post-pool adapter} & \multirow{3}{*}{post-pool} & \multirow{3}{*}{2} & 16\,KiB & $-0.001$ & $1.000$ & yes \\
+ & & & 32\,KiB & $+0.007$ & $0.519$ & yes \\
  & & & 64\,KiB & $+0.006$ & $1.000$ & yes \\
 \bottomrule
 \end{tabular}
+
+\vspace{0.4em}
+{\small A contrast can be \emph{both} significantly different from zero and statistically equivalent within $\pm 0.05$: rank-2 encoder LoRA at 32\,KiB is one (Wilcoxon $p = 0.027$, TOST $p = 0.027$). Significance asks whether the difference is distinguishable from zero; equivalence asks whether it is small. The two columns answer different questions and must not be read as each other's complement. The 18 decisions are \textbf{not} multiplicity-adjusted.}
 \end{table}

@@ -2,8 +2,6 @@
   "release_tag": "v1.0.0-arxiv",
   "software_version": "1.0.0",
   "paper_version": "arXiv v1",
-  "git_commit": "6625136f2191f81de0b274ca9b2976d0dc79a249",
-  "checkpoint_sha256": "a6d4eff14caa4404eb57dc5eb9ecfcb9e9d3f1a1bf907d6d147fb5611eb79fce",
   "checkpoint_parameters": 6643,
   "primary_cohort_records": 21,
   "primary_cells": 630,
@@ -14,12 +12,12 @@
   "verification": {
     "tests_passed": 86,
     "leakage_audit": "PASS 11 / FIXED 1 / ASSESSED 1 / WARN 1 / FAIL 0 (manuscript table)",
-    "manuscript_numbers": "PASS 53 / WARN 0 / FAIL 0",
-    "manuscript_pages": 51,
+    "manuscript_numbers": "PASS 55 / WARN 0 / FAIL 0",
+    "manuscript_pages": 52,
     "type3_fonts": 0,
     "references": 40
   },
-  "artifact_count": 53,
+  "artifact_count": 54,
   "arxiv_id": "PENDING",
   "zenodo_doi": "PENDING",
   "license": "MIT (software only; PhysioNet data under its own terms)",
@@ -29,5 +27,7 @@
     "clean_room_compile": "PASS (51 pages, 0 errors, 0 undefined, 0 Type 3)"
   },
   "repository": "https://github.com/subhajitroy005/BudgetCL-ECG",
-  "note_on_commit": "The manuscript cites the immutable tag rather than a commit hash, since a document cannot contain its own commit. This field records the exact commit for the release."
+  "source_checkpoint_sha256": "a6d4eff14caa4404eb57dc5eb9ecfcb9e9d3f1a1bf907d6d147fb5611eb79fce",
+  "artifact_checksums_file": "checksums.sha256",
+  "note": "No git_commit field: a file inside the tagged tree cannot record the hash of the commit that contains it. GitHub resolves the tag to the exact commit."
 }

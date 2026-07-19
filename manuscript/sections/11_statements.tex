@@ -34,10 +34,10 @@ Software release & \texttt{v1.0.0-arxiv} (annotated, immutable tag) \\
 
 \vspace{0.3em}
 \noindent
-The release tag is the primary identifier: a manuscript cannot contain its own
-Git commit hash, because inserting the hash changes the commit. The exact commit
-for this release is recorded in \texttt{releases/release\_manifest.json} inside
-the tagged tree, so \texttt{v1.0.0-arxiv} resolves to it unambiguously.
+The annotated, immutable Git tag \texttt{v1.0.0-arxiv} is the primary software
+identifier and resolves unambiguously to the exact release commit. The release
+manifest records artifact checksums, configuration identifiers, environment
+information, and the release tag.
 
 \noindent
 The DS1 source checkpoint these results adapt from is pinned by

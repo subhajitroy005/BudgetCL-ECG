@@ -228,6 +228,83 @@ def table_splitfirst_contrasts(rows: list[dict]) -> str:
     return "\n".join(lines)
 
 
+SCOPE_LABELS = {
+    ("encoder_lora", "raw", "1"): ("Encoder LoRA", "raw", "1"),
+    ("encoder_lora", "raw", "2"): ("Encoder LoRA", "raw", "2"),
+    ("head", "postpool", "0"): ("Head only", "post-pool", "0"),
+    ("head", "raw", "0"): ("Head only", "raw", "0"),
+    ("postpool_adapter", "postpool", "1"): ("Post-pool adapter", "post-pool", "1"),
+    ("postpool_adapter", "postpool", "2"): ("Post-pool adapter", "post-pool", "2"),
+}
+
+
+def table_e10_tost(rows: list[dict]) -> str:
+    """E10 budget contrasts with TOST equivalence decisions.
+
+    Generated from results/budget_sweep/E10_tost.csv. This table was previously
+    hand-maintained and contained a wrong cell: rank-2 encoder LoRA at 32 KiB
+    was marked NOT equivalent because its Wilcoxon p was significant, but
+    significance and equivalence are different questions and the TOST decision
+    for that contrast is equivalent. Generating the column removes the chance
+    of repeating that conflation.
+    """
+    families: dict[tuple, list[dict]] = {}
+    for r in rows:
+        families.setdefault((r["scope"], r["replay"], r["rank"]), []).append(r)
+
+    n_equiv = sum(1 for r in rows if r["equivalent_at_margin"].strip().lower() == "true")
+    lines = [
+        r"\begin{table}[H]", r"\centering", r"\small",
+        r"\caption{Paired budget contrasts within the Adam rank-1/rank-2 sweep "
+        r"(E10). Optimizer, trainable scope, rank, and replay location are held "
+        r"fixed and only the budget varies, so each row is a paired comparison "
+        r"over the same 12 records of the secondary panel (3 seeds, Adam only). "
+        r"$\Delta$ is the mean paired change in per-patient \macrof{} relative to "
+        r"the same configuration at 8\,KiB. ``Equiv.'' is a TOST equivalence "
+        r"decision at the pre-stated margin $\delta = 0.05$. "
+        rf"{n_equiv} of {len(rows)} contrasts are equivalent. "
+        r"Raising the budget is never significantly beneficial; for rank-2 "
+        r"encoder LoRA at 64\,KiB it is significantly harmful.}",
+        r"\label{tab:e10_paired}",
+        r"\setlength{\tabcolsep}{5pt}",
+        r"\begin{tabular}{llcrrcc}", r"\toprule",
+        r"Scope & Replay & Rank & Budget & $\Delta$ vs.\ 8\,KiB & Wilcoxon $p$ & Equiv. \\",
+        r"\midrule",
+    ]
+    for i, (key, group) in enumerate(families.items()):
+        if i:
+            lines.append(r"\midrule")
+        scope, replay, rank = SCOPE_LABELS.get(key, (key[0], key[1], key[2]))
+        n = len(group)
+        for j, r in enumerate(group):
+            budget = r["contrast"].split("_vs_")[0].replace("KiB", r"\,KiB")
+            delta = float(r["mean_delta"])
+            wp = float(r["wilcoxon_p"])
+            wp_s = rf"$\mathbf{{{wp:.3f}}}$" if wp < 0.05 else f"${wp:.3f}$"
+            equiv = "yes" if r["equivalent_at_margin"].strip().lower() == "true" else "no"
+            if j == 0:
+                pre = (rf"\multirow{{{n}}}{{*}}{{{scope}}} & "
+                       rf"\multirow{{{n}}}{{*}}{{{replay}}} & "
+                       rf"\multirow{{{n}}}{{*}}{{{rank}}}")
+            else:
+                pre = " & &"
+            lines.append(f"{pre} & {budget} & ${delta:+.3f}$ & {wp_s} & {equiv} \\\\")
+    lines += [
+        r"\bottomrule", r"\end{tabular}",
+        "",
+        r"\vspace{0.4em}",
+        r"{\small A contrast can be \emph{both} significantly different from zero "
+        r"and statistically equivalent within $\pm 0.05$: rank-2 encoder LoRA at "
+        r"32\,KiB is one (Wilcoxon $p = 0.027$, TOST $p = 0.027$). Significance "
+        r"asks whether the difference is distinguishable from zero; equivalence "
+        r"asks whether it is small. The two columns answer different questions "
+        r"and must not be read as each other's complement. The 18 decisions are "
+        r"\textbf{not} multiplicity-adjusted.}",
+        r"\end{table}", "",
+    ]
+    return "\n".join(lines)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results-dir", default=str(repo_root() / "results"))
@@ -249,6 +326,12 @@ def main() -> int:
         write(out / "table_splitfirst.tex", table_splitfirst(arm_rows, read_csv(split_path)))
     else:
         LOG.warning("E17 summary missing; skipping table_splitfirst.tex")
+
+    tost_path = results / "budget_sweep" / "E10_tost.csv"
+    if tost_path.exists():
+        write(out / "table_e10_paired.tex", table_e10_tost(read_csv(tost_path)))
+    else:
+        LOG.warning("E10 TOST CSV missing; skipping table_e10_paired.tex")
 
     contrasts_path = results / "preprocessing_sensitivity" / "E17_paired_tests.csv"
     if contrasts_path.exists():
