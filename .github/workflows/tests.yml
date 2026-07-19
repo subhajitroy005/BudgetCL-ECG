@@ -1,0 +1,48 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # TensorFlow is not needed for the correctness tests: the byte
+      # accounting, metric, cohort, statistics, and preprocessing-boundary
+      # tests all run without it, which keeps CI fast and meaningful.
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy scipy pandas matplotlib pyyaml pytest
+
+      - name: Run tests
+        env:
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
+        run: pytest -v
+
+      - name: Leakage and reproducibility audit
+        run: python scripts/leakage_audit.py
+
+      - name: Regenerate statistics, tables and figures
+        run: |
+          python scripts/run_statistics.py
+          python scripts/make_tables.py
+          python scripts/make_figures.py
+
+      - name: Verify manuscript numbers
+        run: python scripts/verify_manuscript_numbers.py
+
+      - name: Fail if generated output drifted from the committed release
+        run: |
+          if ! git diff --quiet -- results manuscript/tables figures/paper; then
+            echo "::error::regenerated artifacts differ from the committed release"
+            git diff --stat -- results manuscript/tables figures/paper
+            exit 1
+          fi

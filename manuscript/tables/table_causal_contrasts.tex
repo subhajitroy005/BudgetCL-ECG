@@ -1,0 +1,24 @@
+\begin{table}[H]
+\centering
+\small
+\caption{Paired uncertainty for the four controlled contrasts on the 21-record
+patient-disjoint cohort, seeds averaged within patient. Arm means alone are
+misleading here: only the \emph{plasticity} contrast is statistically supported.
+``Mean''/``Med.'' are the paired difference, ``95\% CI'' a patient bootstrap
+interval over the 21 patients ($10{,}000$ resamples), $p$ the Wilcoxon signed-rank value,
+$r_{\mathrm{rb}}$ the rank-biserial effect size, ``I/W'' the threshold-free
+improved/worsened split, and ``@$\epsilon$'' the same split at the $0.02$
+threshold. B1, B4, and B7 are configuration-identical to A1, A4, and A2.}
+\label{tab:causal_contrasts}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llrrcrrrr}
+\toprule
+Contrast & Interpretation & Mean & Med. & 95\% CI & $p$ & $r_{\mathrm{rb}}$ & I/W & @$\epsilon$ \\
+\midrule
+B4$-$B3 & replay beyond plast.      & $+0.048$ & $-0.000$ & $[-0.006,+0.112]$ & $0.473$ & $0.15$ & 10/11 & 6/4 \\
+\textbf{B4$-$B2} & \textbf{plast.\ beyond replay} & $+0.030$ & $+0.006$ & $\mathbf{[+0.007,+0.063]}$ & $\mathbf{0.005}$ & $\mathbf{0.74}$ & \textbf{16/4} & 6/0 \\
+B1$-$B6 & replay volume             & $+0.008$ & $-0.002$ & $[-0.027,+0.056]$ & $0.232$ & $0.37$ & 5/15 & 4/6 \\
+B4$-$B7 & encoder depth             & $+0.013$ & $+0.003$ & $[-0.019,+0.043]$ & $0.179$ & $0.40$ & 14/6 & 8/4 \\
+\bottomrule
+\end{tabular}
+\end{table}

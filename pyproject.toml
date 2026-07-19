@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "budgetcl-ecg"
+version = "1.0.0"
+description = "Replay-plasticity co-design for patient-specific adaptation of tiny ECG Transformers"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Subhajit Roy" }]
+keywords = ["ECG", "continual-learning", "replay", "LoRA", "TinyML"]
+classifiers = [
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+  "tensorflow==2.21.0",
+  "numpy==2.1.3",
+  "scipy==1.15.2",
+  "pandas==2.2.3",
+  "scikit-learn==1.6.1",
+  "wfdb==4.3.0",
+  "matplotlib==3.10.0",
+  "pyyaml==6.0.2",
+  "tqdm==4.67.1",
+]
+
+[project.urls]
+Repository = "https://github.com/SS-Electronics/BudgetCL-ECG"
+
+[tool.setuptools.packages.find]
+# `statistics` is deliberately NOT installed. The directory exists at the repo
+# root (the analysis layer is kept separable from the model code), but a
+# top-level distribution package by that name would shadow Python's stdlib
+# `statistics` module for EVERY package in the environment. Repo-local scripts
+# and tests import it via the repo root; `budget_cl` itself never does.
+include = ["budget_cl*", "preprocessing*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+# Experiment runners legitimately shadow builtins in argparse namespaces.
+ignore = ["B008"]
+
+[tool.ruff.lint.per-file-ignores]
+# arm_specs.py is a data table: one arm per line reads far better than wrapped
+# dict literals, and the alignment is the point.
+"budget_cl/models/arm_specs.py" = ["E501"]
+# Ported model code, kept close to the form that produced the published results.
+"budget_cl/models/lora.py" = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_unused_configs = true
+# Not all TensorFlow surfaces are typed; the strict flag is applied per-module
+# as the package is annotated rather than repository-wide from day one.
+disallow_untyped_defs = false
+ignore_missing_imports = true

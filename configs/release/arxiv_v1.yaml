@@ -1,0 +1,14 @@
+release_name: v1.0.0-arxiv
+paper_version: arXiv v1
+software_version: 1.0.0
+
+checkpoint_sha256: a6d4eff14caa4404eb57dc5eb9ecfcb9e9d3f1a1bf907d6d147fb5611eb79fce
+checkpoint_parameters: 6643
+
+primary_cohort_records: 21
+primary_cells: 630
+
+# Assigned at release; intentionally left as placeholders rather than invented.
+arxiv_id: PENDING
+zenodo_doi: PENDING
+git_commit: PENDING

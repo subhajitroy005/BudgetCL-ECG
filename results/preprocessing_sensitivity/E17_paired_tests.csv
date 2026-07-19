@@ -1,0 +1,5 @@
+comparison,n_pairs,mean_difference,median_difference,ci_low,ci_high,p_wilcoxon_raw,p_holm_within_sensitivity_family,rank_biserial,improved,worsened
+A4_vs_A0,21,0.13,0.0402,0.0496,0.2314,0.001176,0.004704,0.766,17,4
+A5_vs_A0,21,0.1428,0.0388,0.0596,0.2453,0.001176,0.004704,0.766,17,4
+A4_vs_A1,21,0.0038,0.0005,-0.0214,0.027,0.313463,0.435915,0.325,14,6
+A5_vs_A1,21,0.0166,0.0006,-0.0139,0.0472,0.217957,0.435915,0.377,14,6

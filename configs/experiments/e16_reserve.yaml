@@ -1,0 +1,15 @@
+experiment_id: E16
+description: 1 KiB firmware implementation-reserve replication
+
+dataset_config: configs/datasets/mitbih_ds2_primary_21.yaml
+memory_config: configs/memory/budget_16k_reserved.yaml
+preprocessing_config: configs/preprocessing/original_whole_record.yaml
+
+arms: [A0, A1, A2, A3, A4, A5]
+seeds: [42, 43, 44, 45, 46]
+
+# Replay counts are RE-SOLVED against 15,360 B and the grid re-run, rather than
+# old results being re-labelled: A1 705->656, A4 62->57, A5 52->47.
+# Every gain over the frozen model stays significant, but the exact ordering is
+# NOT preserved (A5 loses most, A4 leads), which is what identifies rank-1 as
+# the more robust operating point.

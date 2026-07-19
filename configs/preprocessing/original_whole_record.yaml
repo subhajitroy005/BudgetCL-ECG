@@ -1,0 +1,34 @@
+# Released preprocessing: OFFLINE, NON-CAUSAL, whole-record.
+# Behind every primary number in the paper. Inherited unchanged from the source
+# architecture so adaptation results are not confounded by a front-end change.
+name: original_whole_record
+causal: false
+whole_record_filtering: true
+split_before_filtering: false
+
+baseline_removal:
+  method: cascaded_median
+  first_median_ms: 200      # strips QRS + P, leaves baseline + T-wave
+  second_median_ms: 600     # strips T-wave, leaves baseline estimate
+
+lowpass:
+  type: butterworth
+  order: 4
+  cutoff_hz: 35
+  zero_phase: true          # filtfilt: depends on FUTURE samples
+
+beat_window:
+  size_samples: 198
+  half_left_samples: 99
+
+# Known limitation, quantified rather than asserted. Measured one-sided
+# backward influence across a boundary, relative to signal std:
+#   1e-3 -> 84 samples (233 ms)
+#   1e-4 -> 113 samples
+#   1e-5 -> 120 samples (333 ms)
+# Shorter than one RR interval, so at most the last 1-2 adaptation beats of a
+# record can be affected. E17 removes the dependency entirely.
+known_limitations:
+  non_causal_filters: true
+  filter_support_crosses_split: true
+  measured_backward_reach_samples: 120

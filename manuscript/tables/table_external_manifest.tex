@@ -1,0 +1,35 @@
+\begin{table}[H]
+\centering
+\small
+\caption{External-database inclusion and exclusion flow. \textbf{External
+evaluation uses convenience-capped, minority-support-filtered subsets. The
+eligibility rule uses test-window class labels} --- a recording is retained only
+if its later test window carries at least 30 S$+$V beats --- \textbf{and
+therefore enriches the cohort for recordings where minority-class adaptation can
+be evaluated at all.} These are consequently not representative full-database
+validations and no claim of representative external validation is made from them.
+Every configured recording nevertheless carries exactly one deterministic
+disposition; the full per-record manifests (lead, beat counts, class support, and
+reason) will be released with arXiv v1.0 as
+\texttt{incart\_inclusion\_exclusion\_manifest.csv} and
+\texttt{svdb\_inclusion\_exclusion\_manifest.csv}.}
+\label{tab:external_manifest}
+\begin{tabular}{lrrrr}
+\toprule
+Stage & \multicolumn{2}{c}{INCART} & \multicolumn{2}{c}{SVDB} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+ & Records & Subjects & Records & Subjects \\
+\midrule
+Configured in the database        & 75 & 32 & 78 & 78 \\
+Attempted (within record cap)     & 13 & 7  & 54 & 54 \\
+Preprocessing successful          & 12 & 6  & 54 & 54 \\
+Meets minority-class requirement  & 11 & 6  & 46 & 46 \\
+\textbf{Final evaluated cohort}   & \textbf{11} & \textbf{6} & \textbf{46} & \textbf{46} \\
+\midrule
+\multicolumn{5}{l}{\emph{Exclusion reasons}} \\
+Outside configured record cap     & 62 & --- & 24 & 24 \\
+Preprocessing failure             &  1 & --- &  0 & 0 \\
+Insufficient S$+$V test support   &  1 & --- &  8 & 8 \\
+\bottomrule
+\end{tabular}
+\end{table}

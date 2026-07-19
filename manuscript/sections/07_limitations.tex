@@ -1,0 +1,105 @@
+\section{Limitations and Remaining Work}
+\label{sec:limitations}
+
+We state the current status of each limitation explicitly, including the two that
+were previously hard submission gates.
+
+\textbf{The evaluation cohort had to be corrected for a subject leak, and this
+matters.} The de Chazal DS1/DS2 split is record-disjoint but not
+subject-disjoint: records 201 (DS1) and 202 (DS2) are the same person, per
+record 202's own WFDB header. Any result computed on the full 22-record DS2 set
+includes one patient the source model was trained on. We audited all 48 records,
+found this to be the only such pair, and excluded record 202. The correction is
+not cosmetic --- it removed the statistical significance of the A4--A3 contrast
+(Holm $p$ $0.047 \to 0.075$), leaving only the two comparisons against the frozen
+model surviving correction. Published results on this split that do not exclude
+202 are not strictly patient-disjoint and may be optimistically biased by the
+same mechanism, and we recommend the check
+be run as standard.
+
+\textbf{Class-reweighted source checkpoints (RQ5) --- partially addressed.}
+Five architecture-identical DS1 source variants (cross-entropy, effective-number
+weighting, focal $\gamma\in\{1,2,3\}$) are trained with five seeds and reach
+S sensitivity $0.78$--$0.88$ on their own DS1 test split, a figure that motivated
+the concern. Adaptation from these sources still produces the gain
+(Table~\ref{tab:strong_adapt}), so the \emph{gain} is not an artifact of source
+weakness. Three gaps remain. Adaptation was re-run from two of the five trained
+variants, so the robustness claim covers two sources rather than five; the three
+RR-placement / CNN variants (RR-conditioned token embedding, RR token before
+attention, lightweight inter-patient CNN) require new model graphs and were
+never trained; and the encoder-minus-head margins from the reweighted
+checkpoints, while nonnegative, are small and carry no reported uncertainty, so
+RQ5 does not independently support an encoder-over-head ordering. These
+checkpoints are also not \emph{stronger} sources --- on intra-patient DS1 S
+sensitivity they are below the cross-entropy baseline --- so RQ5 tests
+robustness to the source objective, not adaptation from a stronger start.
+
+\textbf{Cross-database transfer (RQ6) --- closed at subject level, with a
+cohort caveat.} INCART recordings were grouped by the subject identifier in the
+WFDB header and the saved cells re-aggregated to one score per subject, so the
+external analysis no longer treats repeated recordings from one person as
+independent. The gain survives the correction: $+0.160$ \macrof{} for encoder
+LoRA over 6 subjects with a bootstrap interval excluding zero and 6/6 subjects
+improved, against $+0.226$ over 46 subjects on SVDB. Two limits remain. With
+$n = 6$ the INCART result is descriptive rather than inferential, and the INCART
+cohort is a tractability-capped convenience sample --- only the first 13 of 75
+records were attempted --- so it is not a principled sample of the database. Both
+external cohorts now have itemized inclusion and exclusion manifests
+(Table~\ref{tab:external_manifest}) in which every configured recording carries
+exactly one deterministic disposition. Source-only cross-database generalization
+remains weak; it is the target-informed adaptation that is positive.
+
+\textbf{The budget sweep is partial, and named accordingly (RQ4).} Of 140 planned budget $\times$
+optimizer $\times$ rank $\times$ replay-location configurations, 49 are measured,
+5 are analytically infeasible, and 86 are unrun (Table~\ref{tab:exp_status}). The measured surface is complete
+only for Adam at ranks 1--2, and only on a reduced 12-record, 3-seed panel. This
+supports only the narrow claim we make---that \emph{within the measured
+12-record, three-seed Adam rank-1/rank-2 panel, increasing the budget from 8 to
+64\,KiB produced no statistically detectable benefit}, tested by paired contrasts
+and TOST equivalence rather than by interval overlap---and supports nothing about
+optimizer choice, higher ranks, or budgets outside that panel. Numbers from
+this panel are never compared against primary-cohort arms. Following the
+completed scope, we describe E10 as an \emph{Adam budget sweep for rank-1 and
+rank-2 adaptation}, not as the full optimizer grid it was originally designed
+to be.
+
+\textbf{Remaining limitations.} (i)~The primary-cohort direct A4/A5-vs-A1
+comparison remains non-significant ($n=21$), so a definitive ``plasticity beats
+volume'' claim is not licensed; a larger patient cohort is the most plausible
+route to settling it, and the cohort is now one record smaller than the
+protocol's nominal size. (ii)~Persistent-state totals are packed and asserted per cell, and the whole grid
+was replicated against a 1\,KiB firmware implementation reserve with no change in
+conclusions (Section~\ref{sec:reserve}); a byte-exact MCU port would still add
+allocator overhead not modeled here. (iii)~Peak SRAM, update latency, update
+energy, and Flash write volume are all unmeasured, and no hardware training loop
+was executed. \textbf{Training compute, update latency, cycles, and energy are
+unmeasured, and no numerical compute ratio is reported}, because the
+encoder-LoRA backward cost requires layer-level profiling or a complete
+reverse-mode derivation that this study does not provide
+(Appendix~\ref{sec:embedded}). (iv)~The regularization family is represented
+here by \emph{one inexpensive, memory-matched $B$-factor anchor}
+(Section~\ref{sec:reg}), chosen because full-model FP32 EWC costs
+$53{,}144$\,B and is infeasible at this budget. Note it anchors the $B$ factor,
+not the functional update $BA$. Restricted EWC, distillation from the frozen
+model, output-consistency regularization, and functional-delta ($\|AB\|_F^2$)
+regularization all remain untested, so this is a comparison against one
+convenient member of the family and not against the family. (v)~MIT--BIH is small and old, and Q/paced beats are unsupported in the
+primary cohort. (vi)~The reproducibility audit (Table~\ref{tab:audit}) returns 11 PASS, 0 FAIL,
+and one WARN: configuration values are fixed in a versioned config file, but no automated
+provenance proves the hyperparameters were chosen without access to final test
+results. We report the WARN rather than suppressing it; the mitigation is that
+hyperparameters are shared across all arms, so any residual selection effect
+applies to every arm equally and cannot by itself produce the between-arm
+ordering. (vii)~The method assumes supervised labels for an early patient segment
+and has had no prospective clinical evaluation.
+
+\textbf{Framing rule.} Under a fixed analytical adaptation-state budget,
+patient-specific adaptation of the tiny ECG transformer exhibits a
+\emph{replay--plasticity allocation frontier}. Encoder low-rank adaptation with
+limited raw replay significantly improves over the frozen model, produces
+stronger pooled minority-class performance, and yields more threshold-free
+positive patient changes than maximum-volume post-pool replay. However, the
+direct average difference from maximum-volume head-only replay is
+\textbf{not statistically significant}. The evidence therefore supports co-design
+and several competitive operating points rather than a universal winner, and no
+sentence in this paper should be read as establishing superiority over A1.

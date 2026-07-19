@@ -1,0 +1,247 @@
+\section{Experimental Protocol}
+\label{sec:protocol}
+
+\subsection{Source data and source training}
+
+The source backbone is trained \emph{only} on the de Chazal DS1 partition of the
+MIT--BIH Arrhythmia Database. As published, DS1 and DS2 are \emph{record}-disjoint
+rather than patient-disjoint (Section~\ref{sec:cohort}); the cohort correction
+below is what makes the evaluation set genuinely patient-disjoint from DS1. The
+model has 6{,}643
+parameters and the architecture dimensions of Section~\ref{sec:method}. DS2
+records never enter source training. On the held-out DS1 test split the frozen
+source attains \macrof{} $=0.749$ over all five AAMI classes and $0.946$ over
+the supported N/S/V classes, with strong V sensitivity but comparatively weak S
+behavior---the regime in which patient-specific adaptation is expected to help.
+
+\subsection{Primary and secondary cohorts}
+\label{sec:cohort}
+
+\paragraph{The de Chazal split is not patient-disjoint, and we correct it.} The
+DS1/DS2 partition is the standard inter-patient protocol and we adopt it, but it
+contains one subject that appears on both sides. MIT--BIH record 202's own WFDB
+header states that it ``was taken from the same analog tape as record 201''
+\cite{mitdb202note}, and
+the two records carry identical demographics (68\,M, identical medication list).
+Record \textbf{201 is in DS1} and record \textbf{202 is in DS2}. A source model
+trained on DS1 has therefore already seen this subject, and evaluating adaptation
+on record 202 as though it were an unseen patient measures partly memorization
+rather than personalization.
+
+We audited all 48 MIT--BIH records for this failure mode, comparing header
+demographics and explicit same-tape annotations, and found exactly one such
+cross-split pair: 201/202. \textbf{We exclude record 202 from the evaluation
+cohort}, leaving \textbf{21 genuinely patient-disjoint records}. The source model
+is unchanged, since 201 remains a legitimate DS1 training record; only the
+evaluation set changes. Every primary and corrected analysis uses the 21-record
+cohort. One explicitly labelled historical sensitivity result retains the earlier
+22-record split and is not compared with the primary results
+(Section~\ref{sec:lowbyte}). The primary grid is
+$6\ \text{arms}\times21\ \text{records}\times5\ \text{seeds}=630$ adaptation
+cells. We flag this because the contaminated 22-record version is what a
+straightforward reading of the de Chazal protocol produces, and results computed
+that way are not strictly patient-disjoint and may be optimistically biased ---
+on our own data, removing record 202
+raised every arm mean slightly but cost the A4--A3 comparison its statistical
+significance.
+
+\textbf{Primary cohort.} The 21 patient-disjoint DS2 records after the
+\emph{post hoc} subject-identity correction form the primary cohort. Records are \emph{not}
+selected using test-segment arrhythmia burden. This removes the selection bias of
+the earlier exploratory panel and is the cohort behind every headline result.
+Table~\ref{tab:dataset_manifest} lists the record IDs, seeds, class supports, and
+split rule.
+
+\textbf{Secondary cohort.} The 12-record arrhythmia-informative panel (records
+whose test window contains $\ge 30$ arrhythmic beats) is retained only as
+secondary evidence for class-specific behavior, and is clearly labeled as such
+wherever it appears.
+
+\input{tables/table_dataset_manifest}
+
+\subsection{Chronological adaptation}
+
+Each record is split in annotation (temporal) order. The chronologically first
+labeled beats form the adaptation set; a single unlabeled guard beat
+($\mathrm{gap\_beats}=1$) is dropped to prevent centered-window overlap between
+adaptation and test; all later beats are test-only. Early stopping uses only a
+slice of the adaptation union and never the test segment. Streamed patient beats
+are not counted as persistent replay storage---only the fixed source replay
+memory $\mathcal{R}_0$ is. Every patient resets to $\theta_0$. The primary
+run therefore contains $6\ \text{arms}\times21\ \text{records}\times5\
+\text{seeds}=630$ adaptation cells (seeds $\{42,43,44,45,46\}$).
+
+\subsection{Signal preprocessing, stated exactly}
+\label{sec:preproc}
+
+Every record passes through the same front end before beat extraction, applied to
+the whole signal rather than per window. The pipeline is inherited unchanged from
+the source architecture we adopt \cite{busia2025tiny}, so that our adaptation
+results are attributable to the adaptation method rather than to a different
+front end.
+\textbf{Baseline-wander removal} uses two cascaded median filters: a 200\,ms
+kernel strips the QRS and P complexes leaving baseline plus T-wave, a 600\,ms
+kernel on that result strips the T-wave, and the remaining baseline estimate is
+subtracted from the original signal. Kernel lengths are rounded to the nearest
+odd sample count at the record's own sampling rate.
+\textbf{Noise suppression} is a 4th-order Butterworth low-pass at 35\,Hz applied
+\emph{zero-phase} (forward--backward, \texttt{filtfilt}), which is
+non-causal: it uses future samples and could not run unmodified in a streaming
+device. We keep it because it matches the source model's published front end, and
+we flag it as a deployment gap rather than a result.
+\textbf{Resampling} to 360\,Hz uses polyphase resampling
+(\texttt{resample\_poly}) and is applied to external databases only (INCART
+257\,Hz, SVDB 128\,Hz); MIT--BIH is already at 360\,Hz.
+
+\paragraph{Non-causal preprocessing crosses the chronological boundary.} All
+three of those operations --- both median kernels and the zero-phase low-pass ---
+are applied to the \emph{whole record} before the chronological split, and all
+three are non-causal. An adaptation-side sample within the filters' backward
+reach of the split therefore depends on raw samples that belong to the test
+segment. Test \emph{labels} are never involved, and no test beat enters
+adaptation, but the test \emph{signal} is not strictly unseen, so the released
+protocol is properly described as \textbf{offline chronological label
+partitioning with non-causal whole-record preprocessing} rather than as strictly
+causal chronological adaptation.
+
+We bounded the reach empirically rather than assuming it: injecting a truncation
+at a boundary and measuring how far the difference propagates backwards gives a
+one-sided influence of $84$ samples at a $10^{-3}$ relative tolerance and
+$120$ samples ($333$\,ms) at $10^{-5}$ --- shorter than a single RR interval.
+Because a beat window spans $198$ samples, only the last one or two adaptation
+beats of a record can be affected at all. Section~\ref{sec:splitfirst} reports a
+split-first rerun that removes the dependency entirely and quantifies what it
+changes.
+\textbf{Beat windows} are 198 samples centred on the annotated R peak, 99 left
+and 99 right; windows that would extend past a record boundary are dropped rather
+than padded. \textbf{R peaks} come from the WFDB \texttt{atr} annotations, never
+from a detector, so detector error is excluded from this study by construction.
+\textbf{Labels} follow the AAMI N/S/V/F/Q mapping; non-beat annotation symbols
+and symbols outside the mapping are skipped.
+\textbf{RR features} are the preceding and following intervals in seconds,
+normalized with MIT--BIH DS1 statistics only ($\mu = 0.7785$\,s,
+$\sigma = 0.4956$\,s) and clipped to $\pm 2$; no target-database statistic ever
+enters normalization.
+
+\subsection{Replay quantization, stated exactly}
+\label{sec:quant}
+
+Replay values are stored INT8 with \textbf{symmetric, per-tensor} quantization.
+For a stored tensor $x$ the buffer holds
+\begin{equation}
+q=\operatorname{clip}\!\left(\operatorname{round}\!\left(x/s\right),-127,127\right),
+\qquad
+\hat{x}=s\,q,
+\qquad
+s=\frac{\max|x|}{127},
+\label{eq:quant}
+\end{equation}
+where the scale $s$ is calibrated by absolute maximum over the whole buffer at
+the moment it is written, and the zero point is fixed at $0$ by symmetry. One
+FP32 scale is stored per quantized tensor: one for a post-pool buffer, and two
+for a raw buffer, which quantizes the beat and the RR pair on separate scales.
+Per-row scales are deliberately \emph{not} used, because a scale per exemplar
+would add 4\,B per entry and is already charged as buffer metadata in
+Eq.~\eqref{eq:completebudget2}. During adaptation the buffer is dequantized back
+to FP32 by Eq.~\eqref{eq:quant} before entering the graph, so training sees
+exactly the INT8-rounded values a device would replay --- the quantization error
+is inside the experiment, not idealized away.
+
+\subsection{Replay-buffer construction}
+\label{sec:replay_policy}
+
+The replay policy is held fixed across every arm so that the comparison isolates
+allocation rather than selection quality. The buffer is drawn once from the DS1
+source pool by a \textbf{maximum-volume class-balanced selector}: each of the
+five AAMI classes receives an equal quota $\lfloor N/5 \rfloor$, and because rare
+classes exhaust their pool before the quota is met, the unfilled slots are
+redistributed round-robin among classes that still have examples rather than
+being wasted. The selector is seeded by the run seed, so the buffer is
+\emph{fixed across patients} within a seed and \emph{resampled across seeds};
+patient-to-patient variation therefore cannot come from a changing buffer, while
+seed-to-seed variation includes buffer variation, which is the conservative
+choice.
+
+Values are stored INT8 with a per-tensor scale and zero point. A raw entry stores
+the ECG window \emph{and} its RR pair, since the model consumes both and a window
+alone cannot be replayed; the honest per-item cost is therefore 200\,B of values
+rather than the 198\,B of the window alone, and the budget assertion uses 200.
+Post-pool entries are extracted once from the frozen source encoder and are
+therefore \emph{stale by construction}: they are never re-extracted as adaptation
+proceeds, which is exactly why a post-pool buffer cannot track a representation
+that is itself changing --- and is one reason a post-pool buffer pairs naturally
+with a frozen encoder. Raw entries carry no such staleness because they are
+re-forwarded through the current model on every update, at a greater but
+unmeasured compute cost (Appendix~\ref{sec:embedded}). Replay and target beats are
+concatenated into one training set rather than mixed at a fixed per-batch ratio,
+so the effective replay ratio is $N_{\mathrm{replay}} / (N_{\mathrm{replay}} +
+N_{\mathrm{target}})$. There is no eviction policy: the buffer is written once
+and never replaced, since the source distribution is static.
+
+\subsection{Metrics and statistical analysis plan}
+
+\paragraph{The primary metric, stated exactly.} For patient $p$ let $n_{p,c}$ be
+the number of test beats of AAMI class $c$. The scored class set and the primary
+metric are
+\begin{equation}
+\mathcal{C}_p = \{c \in \{\mathrm{N},\mathrm{S},\mathrm{V}\} : n_{p,c} \ge n_{\min}\},
+\qquad
+F1_{\mathrm{macro},p} = \frac{1}{|\mathcal{C}_p|}\sum_{c \in \mathcal{C}_p} F1_{p,c},
+\label{eq:metric}
+\end{equation}
+with $n_{\min} = 1$: a class counts as present if the patient's test segment
+contains at least one beat of it. The remaining conventions are fixed as follows.
+The class set is N/S/V. Fusion (F) is excluded from the primary metric because it
+is absent from most DS2 test segments, so including it would make the
+denominator $|\mathcal{C}_p|$ vary for reasons unrelated to performance; F is
+reported separately as a pooled secondary metric, where the encoder arms show
+their largest relative gain. The unclassifiable class Q is excluded because the
+source model is not trained to separate paced and unclassifiable beats and the
+protocol makes no claim about them. A class with $n_{p,c} = 0$ is omitted from
+the average rather than scored as zero, since scoring an absent class as zero
+would penalize a patient for the composition of their own record. Precision and
+recall use the zero-division convention $0/0 = 0$, which applies only when a
+present class receives no predictions.
+
+Secondary metrics are pooled accuracy, per-class S/V/F sensitivity, precision,
+and F1, the fraction of patients improved versus A0, and source-domain \macrof{}
+change $\Delta^{\mathrm{src}}$ (Eq.~\ref{eq:gain_and_srcchange}), which is negative when
+adaptation costs source performance. Pooled and per-patient summaries are both reported because a
+single record (232) contributes a large fraction of the pooled S beats, so pooled
+scores alone would be misleading. Because the improved-patient count is sensitive
+to how small changes are treated, we report it both threshold-free and at a
+meaningful-change threshold of $0.02$ \macrof{} (Table~\ref{tab:harm}).
+
+The primary metric, seed count, paired tests, effect-size definition, and Holm
+comparison family were fixed before the final runs. Record 202 was excluded after
+a subject-identity audit showed that it belongs to the same patient as DS1
+record 201 (Section~\ref{sec:cohort}); all affected analyses were rerun without
+changing the methods or the comparison family.
+
+Seeds are averaged per patient before
+patient-wise paired tests. For each planned comparison we report the mean and
+median paired difference, a \textbf{patient bootstrap} 95\% confidence
+interval ($10{,}000$ resamples), a paired Wilcoxon signed-rank $p$-value,
+rank-biserial effect size, and a Holm correction across the six-comparison
+family $\{$A4--A1, A5--A1, A4--A2, A4--A3, A4--A0, A5--A0$\}$. A leakage and
+reproducibility audit (no DS1/DS2 record overlap, no adaptation/test window
+crossing, no \emph{primary-cohort} test label used for patient inclusion,
+replay selection, early stopping, hyperparameter selection, or adaptation ---
+external inclusion and the class-aware oracle deliberately do use test-window
+labels and are excluded from this check (Sections~\ref{sec:rq6}
+and~\ref{sec:rq7}) --- source-only
+normalization statistics, stored seeds and library versions, recorded source
+checkpoint hash) accompanies the run and returns PASS\,11 / FIXED\,1 / ASSESSED\,1 / WARN\,1 /
+FAIL\,0.
+
+\paragraph{The bootstrap, stated exactly.} Every interval in this paper is a
+\emph{patient bootstrap}, and we name it that way consistently because seeds are
+collapsed before resampling: (i) average the five seeds within each patient to
+give one score per patient; (ii) resample the 21 patients with replacement;
+(iii) recompute the arm mean or the paired difference on the resampled patients;
+(iv) repeat $10{,}000$ times and take the $2.5$th and $97.5$th percentiles.
+Seeds are therefore not resampled, and we \textbf{do not} call this a
+hierarchical bootstrap --- that term is reserved for a procedure that resamples
+seeds inside every resampled patient, which would be the right choice if
+seed variance were the quantity of interest. External-database intervals use the
+same procedure with subjects in place of patients.

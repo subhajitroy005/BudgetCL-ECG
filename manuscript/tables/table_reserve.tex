@@ -1,0 +1,33 @@
+\begin{table}[H]
+\centering
+\small
+\caption{Implementation-reserve replication on the 21-record patient-disjoint
+cohort. The full A0--A5 grid re-run against an effective ceiling of
+$15{,}360$\,B, i.e.\ holding back a 1\,KiB firmware reserve, same records and
+five seeds. Replay counts fall by roughly $7$--$8\%$. Every arm still
+significantly beats the frozen model and encoder adaptation stays among the top
+allocations, though the exact ordering changes: A5 loses more than A4, making
+rank-1 the more robust operating point.}
+\label{tab:reserve}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lrrrrrr}
+\toprule
+& \multicolumn{3}{c}{16{,}384\,B ceiling} & \multicolumn{3}{c}{$15{,}360$\,B ceiling ($+1$\,KiB reserve)} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Arm & Items & \macrof{} & $\Delta$ vs.\ A0 & Items & \macrof{} & $\Delta$ vs.\ A0 \\
+\midrule
+A0 & 0   & 0.666 & ---      & 0   & 0.666 & --- \\
+A1 & 705 & 0.786 & $+0.119$ & 656 & 0.793 & $+0.127$ \\
+A2 & 678 & 0.790 & $+0.124$ & 629 & 0.779 & $+0.113$ \\
+A3 & 650 & 0.775 & $+0.109$ & 601 & 0.771 & $+0.105$ \\
+A4 & 62  & 0.803 & $+0.136$ & 57  & \textbf{0.802} & $\mathbf{+0.136}$ \\
+A5 & 52  & \textbf{0.809} & $\mathbf{+0.143}$ & 47 & 0.792 & $+0.125$ \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.4em}
+{\small All reserve-arm gains over A0 remain significant by paired Wilcoxon
+($p = 0.006$, $0.003$, $0.010$, $0.004$, $0.005$ for A1--A5). Unreserved the
+order is $\mathrm{A5}>\mathrm{A4}>\mathrm{A2}>\mathrm{A1}>\mathrm{A3}$; reserved
+it is $\mathrm{A4}>\mathrm{A1}>\mathrm{A5}>\mathrm{A2}>\mathrm{A3}$.}
+\end{table}

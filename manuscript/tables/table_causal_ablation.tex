@@ -1,0 +1,24 @@
+\begin{table}[t]
+\centering
+\small
+\caption{E9 controlled replay-versus-plasticity ablation matrix, recomputed on the
+21-record patient-disjoint cohort (five seeds). \textbf{Arm means only} --- the
+paired uncertainty that decides which contrasts are real is in
+Table~\ref{tab:causal_contrasts}, and the mean differences here must not be read
+as effects.}
+\label{tab:causal_ablation}
+\begin{tabular}{lllllll}
+\toprule
+ID & Status & Scope & Replay & Items & Mean & vs B1 \\
+\midrule
+B0 & complete & Frozen & none & 0 & 0.666 & $-0.119$ \\
+B1 & complete & Head & postpool & 705 & 0.786 & $0.000$ \\
+B2 & complete & Head & raw & 72 & 0.773 & $-0.013$ \\
+B3 & complete & Encoder LoRA rank 1 & none & 0 & 0.755 & $-0.031$ \\
+B4 & complete & Encoder LoRA rank 1 & raw & 62 & 0.803 & $+0.017$ \\
+B5 & infeasible & Encoder LoRA rank 1 & raw & 72 &  &  \\
+B6 & complete & Head & postpool & 62 & 0.778 & $-0.008$ \\
+B7 & complete & Post-pool adapter rank 1 & postpool & 678 & 0.790 & $+0.004$ \\
+\bottomrule
+\end{tabular}
+\end{table}

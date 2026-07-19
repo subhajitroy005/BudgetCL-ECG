@@ -1,0 +1,30 @@
+# Rank-1 post-pool residual adapter + head.
+# Replay counts below are DERIVED from configs/memory/*.yaml by
+# budget_cl.memory.budget_solver -- do not hand-edit them.
+arm: A2
+base_checkpoint: checkpoints/source/source_model.keras
+
+trainable:
+  scope: postpool
+  classifier_head: true
+  postpool_adapter:
+    enabled: true
+    rank: 1
+
+trainable_parameters: 131
+
+replay:
+  location: postpool
+  payload_bytes: 18
+  serialized_record_bytes: 21
+  items_primary: 678      # 16,384 B ceiling
+  items_reserved: 629     # 15,360 B ceiling (1 KiB reserve)
+  selector: class_balanced
+
+budget:
+  used_bytes_primary: 16383
+  used_bytes_reserved: 15354
+  budget_bytes: 16384
+
+optimizer:
+  name: adam

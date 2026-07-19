@@ -1,0 +1,16 @@
+# 8 KiB budget, used only by the E10 secondary budget sweep.
+budget_bytes: 8192
+reserve_bytes: 0
+alignment: packed
+
+parameter_state:
+  weight_bytes: 4
+  gradient_bytes: 4
+  optimizer_moment_count: 2
+  optimizer_moment_bytes: 4
+
+replay:
+  raw_record_bytes: 203
+  postpool_record_bytes: 21
+  raw_buffer_metadata_bytes: 54
+  postpool_buffer_metadata_bytes: 49

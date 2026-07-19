@@ -1,0 +1,21 @@
+experiment_id: E9
+description: Controlled replay-versus-plasticity ablations
+
+dataset_config: configs/datasets/mitbih_ds2_primary_21.yaml
+memory_config: configs/memory/budget_16k.yaml
+arms: [B0, B1, B2, B3, B4, B5, B6, B7]
+seeds: [42, 43, 44, 45, 46]
+
+# B5 is analytically INFEASIBLE at 16 KiB; that is a finding, not an error.
+infeasible_arms:
+  B5: "rank-1 encoder LoRA with B2's raw replay count exceeds 16,384 B"
+
+contrasts:
+  B4_minus_B3: replay beyond plasticity
+  B4_minus_B2: plasticity beyond raw replay
+  B1_minus_B6: replay volume
+  B4_minus_B7: encoder depth
+
+# Only the PLASTICITY contrast is statistically supported (B4-B2, p = 0.005).
+# Arm means alone are misleading here, which is why paired uncertainty is
+# reported for every contrast.

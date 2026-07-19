@@ -1,0 +1,25 @@
+experiment_id: E7
+description: Primary A0-A5 patient-specific adaptation evaluation
+
+dataset_config: configs/datasets/mitbih_ds2_primary_21.yaml
+memory_config: configs/memory/budget_16k.yaml
+preprocessing_config: configs/preprocessing/original_whole_record.yaml
+patient_manifest: manifests/mitbih_ds2_primary_21.csv
+
+seeds: [42, 43, 44, 45, 46]
+arms: [A0, A1, A2, A3, A4, A5]
+# 6 arms x 21 records x 5 seeds = 630 adaptation cells
+
+adaptation:
+  chronological: true
+  labels: 500
+  guard_beats: 1            # prevents centred-window overlap at the split
+  batch_size: 64
+  early_stopping:
+    monitor: val_loss       # validation slice of the ADAPTATION union only
+    patience: 15
+    restore_best_weights: true
+
+statistics:
+  patient_bootstrap_iterations: 10000
+  meaningful_change_threshold: 0.02

@@ -1,0 +1,25 @@
+experiment_id: E17
+description: Split-first preprocessing sensitivity (boundary-leakage check)
+
+dataset_config: configs/datasets/mitbih_ds2_primary_21.yaml
+memory_config: configs/memory/budget_16k.yaml
+preprocessing_config: configs/preprocessing/split_first.yaml
+patient_manifest: manifests/mitbih_ds2_primary_21.csv
+
+arms: [A0, A1, A4, A5]
+seeds: [42, 43, 44, 45, 46]
+# 4 arms x 21 records x 5 seeds = 420 cells
+
+adaptation:
+  chronological: true
+  labels: 497
+  guard_beats: 0            # the 720-sample raw guard already separates sides
+  batch_size: 64
+
+boundary_guard_samples_each_side: 720
+
+# Setup trap, recorded so it is not repeated: derive the DS2 set to strip from
+# the CONFIGURED DS2 list, not from the records the split-first build retains.
+# Record 202 is dropped by that build, so the wrong derivation leaves its beats
+# behind and promotes them into the DS1 pool, contaminating replay sampling,
+# RR normalization, and the source probe.

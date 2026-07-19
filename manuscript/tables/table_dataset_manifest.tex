@@ -1,0 +1,45 @@
+\begin{table}[H]
+\centering
+\small
+\caption{Dataset, split, and preprocessing manifest for every database used.
+MIT--BIH records are one per subject \emph{after} removing record 202, which
+shares a subject with DS1 record 201 and would otherwise break patient
+disjointness (Section~\ref{sec:cohort}). INCART contains multiple recordings per
+subject, so its statistical unit is the subject; the full per-record inclusion
+and exclusion manifests will be released with arXiv v1.0.
+\textbf{The eligibility rules are not symmetric, and the difference matters:}
+primary MIT--BIH inclusion is \emph{outcome-blind} --- every corrected DS2
+record is used and test-segment arrhythmia burden plays no part --- whereas the
+external subsets additionally require $\ge 30$ S$+$V beats \emph{in the test
+window}, so external eligibility uses future test labels and enriches those
+cohorts for recordings where minority-class adaptation can be evaluated at
+all.}
+\label{tab:dataset_manifest}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{llll}
+\toprule
+Field & MIT--BIH (primary) & INCART & SVDB \\
+\midrule
+Role & source (DS1) $+$ target (DS2) & external target & external target \\
+Records evaluated & \textbf{21} (DS2) & 11 & 46 \\
+Unique subjects & \textbf{21} & \textbf{6} & 46 \\
+Records available & 48 & 75 & 78 \\
+Lead & MLII & II & ECG1 \\
+Native sampling rate & 360\,Hz & 257\,Hz & 128\,Hz \\
+Resampling & none & \multicolumn{2}{l}{\texttt{resample\_poly} to 360\,Hz} \\
+Beat window & \multicolumn{3}{l}{198 samples, R-peak centred (99 left / 99 right)} \\
+R-peak source & \multicolumn{3}{l}{WFDB \texttt{atr} annotations} \\
+Filtering & \multicolumn{3}{l}{baseline-wander removal $+$ low-pass} \\
+RR normalization & \multicolumn{3}{l}{MIT--BIH DS1 statistics only, clipped at $\pm2$} \\
+AAMI mapping & \multicolumn{3}{l}{N / S / V / F / Q; non-beat symbols ignored} \\
+Adaptation protocol & \multicolumn{3}{l}{chronological first 500 labels, $\mathrm{gap\_beats}=1$, rest test} \\
+Eligibility rule & \textbf{all corrected DS2;} & $\ge 30$ S$+$V beats & $\ge 30$ S$+$V beats \\
+ & \textbf{no test-burden filter} & in the test window & in the test window \\
+Eligibility uses test labels? & \textbf{no} (outcome-blind) & \textbf{yes} & \textbf{yes} \\
+Seeds & \multicolumn{3}{l}{$\{42,43,44,45,46\}$} \\
+\midrule
+DS1 records & \multicolumn{3}{p{9.2cm}}{101 106 108 109 112 114 115 116 118 119 122 124 201 203 205 207 208 209 215 220 223 230} \\
+DS2 records & \multicolumn{3}{p{9.2cm}}{100 103 105 111 113 117 121 123 200 210 212 213 214 219 221 222 228 231 232 233 234 \quad(\emph{202 excluded: same subject as DS1 record 201})} \\
+\bottomrule
+\end{tabular}
+\end{table}

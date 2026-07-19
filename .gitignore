@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Environments
+.venv/
+venv/
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# TensorFlow / model binaries (released via GitHub Release or Zenodo, not Git)
+logs/
+tensorboard/
+*.ckpt
+*.index
+*.data-*
+*.keras
+*.h5
+
+# Datasets: PhysioNet recordings are NOT redistributed here
+datasets/raw/
+datasets/processed/
+datasets/cache/
+
+# Large generated artifacts
+results/raw_runs/
+checkpoints/adapted/
+tmp/
+cache/
+
+# LaTeX build products
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.blg
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+credentials.json
+*.pem
+*.key
+
+# Deliberately NOT ignored (part of the release):
+#   results/**/*.csv, figures/paper/*.pdf, manifests/*.csv,
+#   manuscript/tables/*.tex, checkpoints/checksums.sha256

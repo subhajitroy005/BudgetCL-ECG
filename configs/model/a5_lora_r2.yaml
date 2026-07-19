@@ -1,0 +1,32 @@
+# Rank-2 encoder-attention LoRA + head, raw replay.
+# Replay counts below are DERIVED from configs/memory/*.yaml by
+# budget_cl.memory.budget_solver -- do not hand-edit them.
+arm: A5
+base_checkpoint: checkpoints/source/source_model.keras
+
+trainable:
+  scope: encoder_lora
+  classifier_head: true
+  encoder_lora:
+    enabled: true
+    rank: 2
+    alpha: 1.0
+    target_projections: [query, key, value, output]
+
+trainable_parameters: 351
+
+replay:
+  location: raw
+  payload_bytes: 200
+  serialized_record_bytes: 203
+  items_primary: 52      # 16,384 B ceiling
+  items_reserved: 47     # 15,360 B ceiling (1 KiB reserve)
+  selector: class_balanced
+
+budget:
+  used_bytes_primary: 16226
+  used_bytes_reserved: 15211
+  budget_bytes: 16384
+
+optimizer:
+  name: adam

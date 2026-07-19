@@ -1,0 +1,196 @@
+\section{Problem Formulation and Method}
+\label{sec:method}
+
+\subsection{Patient-sequential adaptation}
+
+Let $\mathcal{D}_0$ denote the source-patient (DS1) training data and
+$f_{\theta_0}$ the source model. For an unseen target patient $p$, an early
+chronological segment $\mathcal{D}^{\mathrm{adapt}}_p$ supplies labeled beats
+for supervised adaptation, while a later segment $\mathcal{D}^{\mathrm{test}}_p$
+is held out for evaluation: no test beat and no test label takes part in
+adaptation or model selection. (The released preprocessing filters each record
+as a whole, so the test \emph{signal} is not strictly unseen near the boundary;
+Section~\ref{sec:protocol} bounds that dependency and Section~\ref{sec:splitfirst}
+reruns the experiment without it.) Each patient begins from the \emph{same}
+source checkpoint $\theta_0$; there is no cross-patient state carry-over. A
+frozen replay memory $\mathcal{R}_0$ of source-domain exemplars is mixed into
+adaptation to limit forgetting.
+
+For a metric $\mathcal{M}$, the per-patient target gain and the per-patient
+\emph{source-domain change} are
+\begin{equation}
+G_p =
+\mathcal{M}\!\left(f_{\theta_p},\mathcal{D}^{\mathrm{test}}_p\right)
+-\mathcal{M}\!\left(f_{\theta_0},\mathcal{D}^{\mathrm{test}}_p\right),
+\qquad
+\Delta^{\mathrm{src}}_p =
+\mathcal{M}\!\left(f_{\theta_p},\mathcal{D}^{\mathrm{src}}_{\mathrm{test}}\right)
+-\mathcal{M}\!\left(f_{\theta_0},\mathcal{D}^{\mathrm{src}}_{\mathrm{test}}\right).
+\label{eq:gain_and_srcchange}
+\end{equation}
+Both are \emph{signed changes measured in the same direction}: positive means the
+adapted model is better than the frozen source on that domain, negative means
+worse. We therefore report $\Delta^{\mathrm{src}}_p$ throughout and call it the
+\textbf{source-domain \macrof{} change}, not ``forgetting''. Every source-domain
+number in this paper is negative, meaning source performance fell by that amount;
+a value of $-0.027$ is a smaller loss than $-0.136$. We avoid the word forgetting
+for the quantity itself because the two common conventions differ in sign and
+mixing them is a standard source of confusion.
+The primary unit of analysis is the patient: $\mathcal{M}$ is per-patient
+\macrof{} over the AAMI classes present in that patient's test segment.
+Fig.~\ref{fig:protocol} summarizes the adaptation protocol end to end.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{fig_method_protocol.pdf}
+\caption{Method and experimental protocol. A DS1-trained tiny ECG transformer
+is adapted per patient: source replay is mixed with the early (chronologically
+first) labeled patient segment, while the later segment is held out for
+testing: it contributes no beat, label, normalization statistic, early-stopping
+signal, or model-selection information. The bounded whole-record filter
+dependency near the chronological boundary is quantified and removed in the
+split-first sensitivity analysis of Section~\ref{sec:splitfirst}. Adaptation may touch the classifier head, a post-pool residual
+adapter, or an encoder-attention LoRA update, each drawing from the same
+persistent-state budget. The budget covers persistent adaptation state; peak
+temporary training memory and hardware runtime are not evaluated.}
+\label{fig:protocol}
+\end{figure}
+
+\subsection{Analytical adaptation-state model}
+
+\paragraph{What ``persistent state'' means here.} We use \emph{persistent
+adaptation state} to mean \textbf{a statically reserved writable region that the
+adaptation procedure needs across update steps}. It does \emph{not} imply that
+every included quantity is nonvolatile or must survive power loss, and it is
+\emph{not} total SRAM. The budget covers trainable weights, optimizer moments,
+replay values, replay labels, and buffer metadata, all of which must persist
+between updates. It also charges gradients, which are strictly update-time
+working state rather than retained state; we include them because an
+implementation that materializes a full gradient vector must reserve that region,
+and excluding them would understate what a device has to set aside. It excludes
+forward and backward activations, stack and workspace, and allocator overhead,
+which are transient peak-SRAM quantities and are not measured anywhere in this
+paper (Table~\ref{tab:memcats}).
+
+
+A complete persistent-state accounting includes
+\begin{equation}
+B_{\mathrm{persistent}} =
+B_{\mathrm{weights}}+B_{\mathrm{gradients}}+B_{\mathrm{optimizer}}
++B_{\mathrm{replay}}+B_{\mathrm{labels}}+B_{\mathrm{metadata}}+B_{\mathrm{padding}}.
+\label{eq:completebudget}
+\end{equation}
+The experiments use FP32 trainable weights, FP32 gradients, and two FP32 Adam
+moments, giving a per-parameter trainable cost of
+\begin{equation}
+b_{\mathrm{train}}=\underbrace{4}_{\text{weight}}+\underbrace{4}_{\text{grad}}
++\underbrace{8}_{\text{2 moments}}=16\ \mathrm{bytes/parameter}.
+\end{equation}
+A stored replay item costs more than the tensor it carries, and conflating the
+two is an easy way to understate a budget. We therefore separate the
+\emph{value payload} from the \emph{serialized record}:
+\begin{equation}
+b_l^{\mathrm{record}} =
+b_l^{\mathrm{payload}} + b_{\mathrm{label}} + b_{\mathrm{flags}}
++ b_{\mathrm{pad}},
+\label{eq:record}
+\end{equation}
+where $b_l^{\mathrm{payload}}$ is the INT8 tensor at replay location $l$ and the
+remaining terms are the per-entry label, the validity and class-id flags, and any
+alignment padding. Concretely
+$b^{\mathrm{payload}} = 18\bytes \to b^{\mathrm{record}} = 21\bytes$ for
+post-pool and $200\bytes \to 203\bytes$ for raw, at 1-byte alignment. For $P$
+trainable parameters and $N$ replay items the reserved adaptation state is
+\begin{equation}
+B(P,N,l)=16P+N\,b_l^{\mathrm{record}}+B_{\mathrm{bufmeta}},
+\label{eq:completebudget2}
+\end{equation}
+with $B_{\mathrm{bufmeta}}$ the fixed per-buffer overhead (write
+index, count, reservoir state, class counters, and quantization parameters:
+$49\bytes$ post-pool, $54\bytes$ raw). The constrained replay-count generator that
+fixes a fair budget match is therefore
+\begin{equation}
+N_{\max}(P,l)=
+\left\lfloor
+\frac{B_{\mathrm{budget}}-16P-B_{\mathrm{bufmeta}}}
+     {b_l^{\mathrm{record}}}
+\right\rfloor .
+\label{eq:nmax}
+\end{equation}
+Every byte total in this paper uses $b_l^{\mathrm{record}}$, never
+$b_l^{\mathrm{payload}}$; where the text quotes 18 or 200 bytes it is naming the
+payload explicitly.
+Every configuration in this paper is generated from Eq.~\eqref{eq:nmax} so that
+$B(P,N_{\max},l)\le 16{,}384\bytes$ holds by construction; the packed byte total
+for each arm is asserted per adaptation cell. Table~\ref{tab:arm_definitions}
+lists the resulting trainable counts, replay counts, and byte totals.
+
+\paragraph{One-beat decision latency from the post-RR feature.} The model
+consumes both the preceding and the \emph{following} RR interval. The following
+interval is only known once the next R peak has been detected, so a classification
+cannot be emitted at the current R peak: \textbf{the task evaluated here is
+delayed heartbeat classification, one beat behind the signal}, not zero-latency
+classification. This is a property of the source architecture we adopt rather
+than of the adaptation method, and it applies equally to every arm including the
+frozen baseline, so it does not affect any comparison in this paper. It does bound
+the deployment claim, and comparing pre-RR-only, predicted-post-RR, and delayed
+variants is left as future work.
+
+\subsection{Replay-point cliff}
+
+The base model accepts a 198-sample ECG window and two RR-derived interval
+values. A convolutional embedding produces 66 tokens of width 16; the
+feed-forward hidden dimension is 128; mean pooling then contracts the sequence,
+and the two RR values are fused post-pool. Table~\ref{tab:replay_bytes} and
+Fig.~\ref{fig:cliff} give the per-item INT8 payload at each candidate replay tap.
+Only the post-pool (and post-pool$+$RR) representation is smaller than the raw
+input; convolution tokens are $5.3\times$ and the FFN hidden tensor $42.7\times$
+larger. The cliff is deterministic for this architecture and fixes \emph{where}
+replay may be stored, but not \emph{where it should be}.
+
+\input{tables/table_replay_bytes}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{fig_replay_cliff.pdf}
+\caption{Replay-point cliff (log scale). Token and feed-forward representations
+expand relative to the raw ECG window; only post-pool replay is
+storage-compressive. Storing post-pool exemplars therefore maximizes replay
+\emph{count}, which motivates---but does not justify---maximum-volume post-pool
+replay.}
+\label{fig:cliff}
+\end{figure}
+
+\subsection{Adaptation arms}
+
+Six arms span the replay-volume / plasticity trade-off at 16\,KiB:
+\begin{itemize}[leftmargin=*]
+\item \textbf{A0} --- frozen source model (reference; 0 trainable, 0 replay);
+\item \textbf{A1} --- 95-parameter linear head, maximum post-pool replay;
+\item \textbf{A2} --- rank-1 post-pool residual adapter plus head, post-pool replay;
+\item \textbf{A3} --- rank-2 post-pool residual adapter plus head, post-pool replay;
+\item \textbf{A4} --- rank-1 encoder-attention LoRA plus head, raw replay;
+\item \textbf{A5} --- rank-2 encoder-attention LoRA plus head, raw replay.
+\end{itemize}
+For fused representation $z\in\mathbb{R}^{18}$, the post-pool adapter applies
+$z'=z+BAz$ with $A\in\mathbb{R}^{r\times18}$, $B\in\mathbb{R}^{18\times r}$. For
+an encoder projection $W$, LoRA applies $W'=W+BA$ with
+$A\in\mathbb{R}^{r\times d_{\mathrm{in}}}$, $B\in\mathbb{R}^{d_{\mathrm{out}}\times r}$.
+A1--A3 spend the budget on \emph{volume}: 650--705 post-pool exemplars at
+18\,B of payload each (21\,B serialized). A4--A5 spend it on \emph{depth}: only
+52--62 raw exemplars at 200\,B payload (203\,B serialized) each, but expose the encoder to low-rank updates. For context,
+full-model Adam-style trainable state would need $6643\times16=106{,}288$ bytes,
+far beyond the ceiling, so full fine-tuning is infeasible under the constraint.
+Fig.~\ref{fig:budget} shows how each arm partitions the same 16\,KiB.
+
+\input{tables/table_arm_definitions}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.80\textwidth]{fig_budget_composition.pdf}
+\caption{Persistent-state composition of each arm at 16\,KiB. Volume arms
+(A1--A3) allocate almost the entire budget to replay values; depth arms
+(A4--A5) shift bytes into trainable weights, gradients, and optimizer moments,
+leaving room for only tens of raw exemplars.}
+\label{fig:budget}
+\end{figure}

@@ -1,0 +1,33 @@
+\begin{table}[H]
+\centering
+\small
+\caption{E12 label-budget curve for A4 on the 21-record patient-disjoint cohort
+(5 seeds). ``Cohort recovery'' is the fraction of the 500-label mean gain over A0
+recovered at that budget. Per-patient recovery, which is materially weaker, is in
+Table~\ref{tab:recovery}.}
+\label{tab:e12_label_curve}
+\begin{tabular}{lrrrr}
+\toprule
+Policy & Labels & \macrof{} & 95\% CI & Cohort recovery \\
+\midrule
+\multirow{5}{*}{Class-aware oracle}
+ & 25  & 0.745 & $[0.672,0.818]$ & 0.582 \\
+ & 50  & 0.764 & $[0.692,0.835]$ & 0.716 \\
+ & 100 & 0.780 & $[0.705,0.853]$ & 0.832 \\
+ & 200 & 0.793 & $[0.717,0.867]$ & 0.931 \\
+ & 500 & 0.802 & $[0.733,0.873]$ & 1.000 \\
+\midrule
+\multirow{5}{*}{Repeated random}
+ & 25  & 0.740 & $[0.669,0.813]$ & 0.541 \\
+ & 50  & 0.754 & $[0.681,0.828]$ & 0.643 \\
+ & 100 & 0.773 & $[0.698,0.848]$ & 0.784 \\
+ & 200 & 0.787 & $[0.713,0.858]$ & 0.885 \\
+ & 500 & 0.802 & $[0.731,0.875]$ & 1.000 \\
+\midrule
+\multicolumn{5}{l}{\emph{Reference points, full 500 labels, chronological}} \\
+ A0 frozen & 500 & 0.666 & $[0.563,0.766]$ & --- \\
+ A1 head $+$ max replay & 500 & 0.786 & $[0.712,0.859]$ & --- \\
+ A5 LoRA $r{=}2$ & 500 & 0.809 & $[0.734,0.883]$ & --- \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,20 @@
+# Deployable ceiling: 1 KiB held back as a firmware implementation reserve.
+# An arm consuming 16,383 of 16,384 bytes is not shippable. Arms are RE-SOLVED
+# against the reduced ceiling and re-run at the lower replay counts, rather
+# than being re-labelled at the old counts.
+budget_bytes: 16384
+reserve_bytes: 1024
+effective_budget_bytes: 15360
+alignment: packed
+
+parameter_state:
+  weight_bytes: 4
+  gradient_bytes: 4
+  optimizer_moment_count: 2
+  optimizer_moment_bytes: 4
+
+replay:
+  raw_record_bytes: 203
+  postpool_record_bytes: 21
+  raw_buffer_metadata_bytes: 54
+  postpool_buffer_metadata_bytes: 49

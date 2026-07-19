@@ -1,0 +1,11 @@
+# Source training partition (de Chazal DS1). Never used as adaptation targets;
+# supplies the source model, the replay pool, and the source-domain probe.
+dataset: mitbih
+role: source
+records:
+  ["101", "106", "108", "109", "112", "114", "115", "116", "118", "119",
+   "122", "124", "201", "203", "205", "207", "208", "209", "215", "220",
+   "223", "230"]
+notes: >
+  Record 201 remains a legitimate DS1 training record. The 201/202 correction
+  removes 202 from the EVALUATION cohort only; the source model is unchanged.

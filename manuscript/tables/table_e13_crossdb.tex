@@ -1,0 +1,36 @@
+\begin{table}[H]
+\centering
+\small
+\caption{E13 cross-database adaptation, \textbf{aggregated to unique subjects}.
+INCART recordings are grouped by the subject identifier in the WFDB header
+(11 recordings $\rightarrow$ 6 subjects); SVDB recordings are one per subject.
+Scores are per-subject \macrof{} over N/S/V with 95\% bootstrap intervals over
+subjects, mean paired gain versus the frozen source, and subjects improved. With
+$n = 6$ the INCART rows are descriptive rather than inferential.}
+\label{tab:e13_crossdb}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{llrcrcr}
+\toprule
+DB & Method & \macrof{} & 95\% CI & $\Delta$ & $\Delta$ CI & Impr. \\
+\midrule
+\multirow{4}{*}{\shortstack[l]{INCART\\$n=6$ subj.}}
+ & Frozen source         & 0.459 & $[0.372,0.548]$ & ---      & ---                 & ---  \\
+ & Head $+$ post-pool     & 0.595 & $[0.567,0.621]$ & $+0.137$ & $[+0.058,+0.215]$   & 6/6  \\
+ & Enc.\ LoRA $+$ raw    & 0.618 & $[0.601,0.639]$ & $+0.160$ & $[+0.082,+0.234]$   & 6/6  \\
+ & Enc.\ LoRA, no replay & 0.647 & $[0.630,0.666]$ & $+0.189$ & $[+0.110,+0.264]$   & 6/6  \\
+\midrule
+\multirow{4}{*}{\shortstack[l]{SVDB\\$n=46$ subj.}}
+ & Frozen source         & 0.384 & $[0.335,0.434]$ & ---      & ---                 & ---   \\
+ & Head $+$ post-pool     & 0.580 & $[0.543,0.618]$ & $+0.196$ & $[+0.152,+0.241]$   & 45/46 \\
+ & Enc.\ LoRA $+$ raw    & 0.610 & $[0.566,0.653]$ & $+0.226$ & $[+0.179,+0.274]$   & 46/46 \\
+ & Enc.\ LoRA, no replay & 0.626 & $[0.578,0.674]$ & $+0.242$ & $[+0.190,+0.297]$   & 45/46 \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.4em}
+{\small Source-domain \macrof{} change on DS1 N/S/V: INCART
+$-0.039$ / $-0.045$ / $-0.115$ and SVDB $-0.066$ / $-0.068$ / $-0.137$ for
+head-only replay, encoder LoRA with raw replay, and encoder LoRA without replay
+respectively. Dropping replay buys the largest target gain at the largest
+retention cost.}
+\end{table}

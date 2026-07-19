@@ -1,0 +1,25 @@
+# Corrected primary target cohort: 21 patient-disjoint MIT-BIH DS2 records.
+#
+# Record 202 is excluded because 202.hea states it was "taken from the same
+# analog tape as record 201", and de Chazal places 201 in DS1. A source model
+# trained on DS1 has therefore already seen that subject. All 48 records were
+# audited; 201/202 is the only cross-split pair.
+#
+# Effect of the correction: every arm mean rose slightly and the A4-vs-A3
+# comparison LOST significance (Holm 0.047 -> 0.075). Any 22-record number is
+# not strictly patient-disjoint and may be optimistically biased.
+dataset: mitbih
+role: target
+cohort: primary_21
+
+records:
+  ["100", "103", "105", "111", "113", "117", "121", "123", "200", "210",
+   "212", "213", "214", "219", "221", "222", "228", "231", "232", "233", "234"]
+
+excluded_records:
+  "202": "Same subject as source record 201 (202.hea: same analog tape)"
+
+selection:
+  # The cohort is NOT filtered by test-segment arrhythmia burden. Doing so
+  # would select on the outcome and bias every arm upward.
+  uses_test_burden: false

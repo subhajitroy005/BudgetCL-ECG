@@ -1,0 +1,31 @@
+{
+  "release_tag": "v1.0.0-arxiv",
+  "software_version": "1.0.0",
+  "paper_version": "arXiv v1",
+  "git_commit": "16ac34312ef5ce207b774264dd3ebd125d33c761",
+  "checkpoint_sha256": "a6d4eff14caa4404eb57dc5eb9ecfcb9e9d3f1a1bf907d6d147fb5611eb79fce",
+  "checkpoint_parameters": 6643,
+  "primary_cohort_records": 21,
+  "primary_cells": 630,
+  "split_first_cells": 420,
+  "excluded_records": {
+    "202": "Same subject as source record 201"
+  },
+  "verification": {
+    "tests_passed": 86,
+    "leakage_audit": "PASS 11 / FIXED 1 / ASSESSED 1 / WARN 1 / FAIL 0 (manuscript table)",
+    "manuscript_numbers": "PASS 51 / WARN 0 / FAIL 0",
+    "manuscript_pages": 51,
+    "type3_fonts": 0,
+    "references": 40
+  },
+  "artifact_count": 50,
+  "arxiv_id": "PENDING",
+  "zenodo_doi": "PENDING",
+  "license": "MIT (software only; PhysioNet data under its own terms)",
+  "arxiv_package": {
+    "file": "releases/Replay-Plasticity-ECG-arxiv-v1.zip",
+    "sha256": "fd528ed26f86b65417770cd3cb342a5896edfb7fef1ebbdd354918644779e1eb",
+    "clean_room_compile": "PASS (51 pages, 0 errors, 0 undefined, 0 Type 3)"
+  }
+}

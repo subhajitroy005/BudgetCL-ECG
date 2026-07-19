@@ -1,0 +1,32 @@
+\begin{table}[H]
+\centering
+\small
+\caption{Replay-point sizes and the \emph{serialized} INT8 cost of one stored
+exemplar at each candidate tap. ``Values'' is the tensor itself; ``$+$RR'' adds
+the two RR-interval features the model also consumes, without which an exemplar
+cannot be replayed; ``$+$meta'' adds the per-entry label, valid flag, and class
+id. The stride is the per-entry cost under 1-byte alignment, which is exact here
+because every field is a byte. Only the post-pool tap is storage-compressive.}
+\label{tab:replay_bytes}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{llrrrrl}
+\toprule
+Replay point & Shape & Values & $+$RR & $+$meta & $\times$ raw & Verdict \\
+\midrule
+Raw ECG window          & $198\times1$  & 198   & 200   & 203   & $1.00$  & baseline \\
+After conv embedding    & $66\times16$  & 1{,}056 & 1{,}058 & 1{,}061 & $5.33$  & larger (disqualified) \\
+Encoder output          & $66\times16$  & 1{,}056 & 1{,}058 & 1{,}061 & $5.33$  & larger (disqualified) \\
+FFN hidden              & $66\times128$ & 8{,}448 & 8{,}450 & 8{,}453 & $42.67$ & larger (disqualified) \\
+Post-pool (mean)        & $16$          & 16    & 18    & 21    & $0.08$  & \textbf{smaller (viable)} \\
+Post-pool $+$ RR concat & $18$          & 18    & 18    & 21    & $0.09$  & \textbf{smaller (viable)} \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.4em}
+{\small Buffer-level fixed metadata is charged once, not per entry: a 4\,B write
+index, a 4\,B count, 16\,B of reservoir state, $5\times4$\,B class counters, and a
+4\,B scale plus 1\,B zero point per quantized tensor. That is 49\,B for a
+post-pool buffer (one quantized tensor) and 54\,B for a raw buffer (two: the beat
+and the RR pair). Under 4-byte alignment the strides become 24\,B and 204\,B;
+we report the 1-byte figures and account for padding explicitly.}
+\end{table}

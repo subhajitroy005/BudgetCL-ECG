@@ -1,0 +1,27 @@
+# Linear head only, maximum post-pool replay.
+# Replay counts below are DERIVED from configs/memory/*.yaml by
+# budget_cl.memory.budget_solver -- do not hand-edit them.
+arm: A1
+base_checkpoint: checkpoints/source/source_model.keras
+
+trainable:
+  scope: postpool
+  classifier_head: true
+
+trainable_parameters: 95
+
+replay:
+  location: postpool
+  payload_bytes: 18
+  serialized_record_bytes: 21
+  items_primary: 705      # 16,384 B ceiling
+  items_reserved: 656     # 15,360 B ceiling (1 KiB reserve)
+  selector: class_balanced
+
+budget:
+  used_bytes_primary: 16374
+  used_bytes_reserved: 15345
+  budget_bytes: 16384
+
+optimizer:
+  name: adam

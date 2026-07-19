@@ -1,0 +1,23 @@
+\begin{table}[H]
+\centering
+\small
+\caption{Patient-harm profile on the 21-record patient-disjoint cohort, seeds
+averaged. $G_p$ is the per-patient change in the primary metric against the
+frozen model A0. Improved / unchanged / harmed use a meaningful-change threshold
+$\epsilon = 0.02$ stated before analysis, and
+$R_{\mathrm{harm}} = |\{p : G_p < -\epsilon\}| / P$. ``Impr.\ ($>0$)'' repeats
+the threshold-free count from Table~\ref{tab:primary_arms}.}
+\label{tab:harm}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrrrrrrr}
+\toprule
+Arm & Mean $G_p$ & Med.\ $G_p$ & Impr. & Unch. & Harmed & $R_{\mathrm{harm}}$ & Min $G_p$ & 5th pct. & Max $G_p$ & Impr.\ ($>0$) \\
+\midrule
+A1 & $+0.119$ & $+0.028$ & 11 & 10 & \textbf{0} & \textbf{0.000} & $-0.017$ & $-0.016$ & $+0.793$ & 12 \\
+A2 & $+0.124$ & $+0.040$ & 12 & 8  & 1 & 0.048 & $-0.069$ & $-0.020$ & $+0.789$ & 15 \\
+A3 & $+0.109$ & $+0.037$ & 11 & 8  & 2 & 0.095 & $-0.052$ & $-0.036$ & $+0.770$ & 13 \\
+A4 & $+0.136$ & $+0.035$ & \textbf{12} & 7 & 2 & 0.095 & $\mathbf{-0.034}$ & $-0.027$ & $+0.804$ & \textbf{17} \\
+A5 & $+0.143$ & $+0.037$ & \textbf{12} & 7 & 2 & 0.095 & $-0.123$ & $-0.024$ & $+0.804$ & \textbf{17} \\
+\bottomrule
+\end{tabular}
+\end{table}

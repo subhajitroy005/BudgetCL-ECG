@@ -1,0 +1,19 @@
+# Primary persistent-state ceiling.
+budget_bytes: 16384
+reserve_bytes: 0
+alignment: packed
+
+parameter_state:
+  weight_bytes: 4
+  gradient_bytes: 4
+  optimizer_moment_count: 2   # Adam
+  optimizer_moment_bytes: 4
+  # -> 16 B of persistent state per trainable parameter
+
+replay:
+  # SERIALIZED record sizes (payload + label + valid flag + class id).
+  # Payloads alone are 200 B / 18 B; every byte total uses the serialized size.
+  raw_record_bytes: 203
+  postpool_record_bytes: 21
+  raw_buffer_metadata_bytes: 54
+  postpool_buffer_metadata_bytes: 49

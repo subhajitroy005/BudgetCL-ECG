@@ -1,0 +1,99 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{microtype}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xurl}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{longtable}
+
+\hypersetup{
+  pdftitle={Replay--Plasticity Co-Design at 16 KiB for Patient-Specific Adaptation of a Tiny ECG Transformer},
+  pdfauthor={Subhajit Roy},
+  pdfsubject={Memory-constrained patient-specific ECG adaptation},
+  pdfkeywords={ECG, continual learning, replay, LoRA, TinyML, patient-specific adaptation}
+}
+
+\graphicspath{{figures/}}
+\setlength{\parskip}{0.35em}
+\setlength{\parindent}{0pt}
+\captionsetup{font=small}
+\newcommand{\kib}{\,\mathrm{KiB}}
+\newcommand{\bytes}{\,\mathrm{B}}
+\newcommand{\macrof}{macro-F1}
+% long compound terms in this paper are otherwise unbreakable and cause
+% marginal overfull lines; give TeX explicit break points.
+\hyphenation{mi-nor-i-ty-class-strength-ened re-play-plas-tic-ity
+             per-sis-tent-state pa-tient-spe-cif-ic post-pool
+             hard-ware-mo-ti-vat-ed re-pro-duc-i-bil-i-ty}
+
+\title{\textbf{Replay--Plasticity Co-Design at 16\,KiB for Patient-Specific
+Adaptation of a Tiny ECG Transformer}\\
+\large A Software Study Under an Analytical Persistent-State Budget}
+
+\author{Subhajit Roy\\
+\small Independent Researcher\\
+\small \texttt{subhajitroy005@gmail.com}}
+
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Patient-specific adaptation of tiny electrocardiogram (ECG) classifiers must fit
+replay exemplars, trainable parameters, gradients, and optimizer state into one
+small reserved adaptation budget. We study that allocation in a
+6{,}643-parameter ECG transformer under an analytical 16\,KiB constraint on
+\emph{persistent state}---what a device must retain between adaptation steps,
+explicitly excluding peak training SRAM. The architecture exhibits a
+\emph{replay-point cliff}: a 198-sample beat expands to 1{,}056 token elements
+and an 8{,}448-element feed-forward tensor while global pooling contracts it to
+16, so only post-pool replay is storage-compressive, making maximum-volume
+post-pool replay the naive budget-optimal choice. Over all 21 patient-disjoint
+MIT--BIH DS2 records and five seeds (630 chronological adaptation cells), with
+metric, seed count, tests, effect size, and multiplicity family fixed before the
+final runs, a rank-1 encoder low-rank adapter with tens of raw replay samples
+raises per-patient \macrof{} from $0.666$ to $0.803$ and a rank-2 adapter to
+$0.809$, each improving 17 of 21 patients against 12 for maximum head-only
+replay, with stronger pooled minority-class performance. Both
+beat the frozen model (Holm $p \le 0.008$), but their \emph{direct} comparison
+with maximum head-only replay is \textbf{not} significant ($p = 0.25$, $0.11$),
+so maximum-volume replay is not established as uniquely optimal. Paired
+ablations support a contribution from encoder plasticity ($p = 0.005$) but not
+from replay volume. The evidence supports a \textbf{replay--plasticity
+allocation frontier} with several competitive operating points rather than a
+universal winner. This study is software-only: no hardware runtime, SRAM,
+latency, or energy is measured.
+\end{abstract}
+
+\textbf{Keywords:} arrhythmia classification; continual learning;
+electrocardiography; low-rank adaptation; patient-specific learning; replay;
+TinyML; transformers.
+
+\input{sections/01_introduction}
+\input{sections/02_related_work}
+\input{sections/03_problem_and_method}
+\input{sections/04_experimental_protocol}
+\input{sections/05_results}
+\input{sections/06_discussion}
+\input{sections/07_limitations}
+\input{sections/08_conclusion}
+
+\appendix
+\input{sections/09_appendix}
+\input{sections/10_embedded_appendix}
+
+\input{sections/11_statements}
+
+\input{references}
+
+\end{document}

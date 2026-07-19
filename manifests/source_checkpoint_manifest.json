@@ -1,0 +1,8 @@
+{
+  "file": "source_model.keras",
+  "sha256": "a6d4eff14caa4404eb57dc5eb9ecfcb9e9d3f1a1bf907d6d147fb5611eb79fce",
+  "parameters": 6643,
+  "source_dataset": "MIT-BIH DS1 (de Chazal partition)",
+  "architecture": "tiny ECG Transformer: conv tokenizer -> 1 encoder block -> mean pool -> RR fusion -> 5-way head",
+  "note": "Model binaries are not committed to Git; see checkpoints/README.md."
+}

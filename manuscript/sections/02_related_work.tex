@@ -1,0 +1,200 @@
+\section{Related Work}
+\label{sec:relatedwork}
+
+\subsection{Patient-specific ECG adaptation}
+
+Personalizing a heartbeat classifier to an individual is a long-standing idea.
+The mixture-of-experts classifier of Hu et al.\ combines a global model with a
+small patient-specific expert trained on a brief annotated segment
+\cite{hu1997patient}, and Kiranyaz et al.\ train a compact 1-D convolutional
+network per patient from a few hundred labelled beats \cite{kiranyaz2016realtime}.
+Both establish the central empirical fact we build on: a short labelled prefix of
+a patient's own record is worth a great deal, particularly for supraventricular
+beats that inter-patient models systematically miss. Neither, however, bounds the
+\emph{state} that personalization costs. Their patient models are stored and
+trained without a byte budget, and neither considers what must be retained
+alongside the parameters --- gradients, optimizer moments, and rehearsal data ---
+which is precisely the quantity that decides whether personalization can run on a
+microcontroller. Large-scale ECG networks \cite{hannun2019cardiologist} sharpen
+the same gap in the opposite direction: accuracy at a parameter scale far beyond
+an embedded budget.
+
+\subsection{Inter-patient ECG classification}
+
+The MIT--BIH Arrhythmia Database remains a common benchmark for heartbeat
+classification \cite{moody2001impact,goldberger2000physiobank}. Patient-wise
+evaluation is substantially more demanding than random beat-level splitting,
+because morphology correlations within a record inflate optimistic estimates
+when beats from the same patient appear in both train and test. The de Chazal
+protocol partitions records into disjoint patient groups (DS1/DS2) and combines
+morphology with heartbeat-interval features \cite{dechazal2004automatic}. We
+adopt the conventional DS1/DS2 record partition, correct its 201/202 cross-split
+subject overlap, and use the AAMI class mapping
+\cite{ansi2012aami} but study \emph{supervised adaptation} within an unseen
+patient's own chronological record, rather than a single static inter-patient
+model. Feature-selection work driven explicitly by cross-database generalization
+\cite{llamedo2011heartbeat,mar2011optimization} shows how fragile inter-patient
+performance is when the evaluation database changes, which motivates our external
+validation on INCART and the MIT--BIH Supraventricular Arrhythmia Database
+\cite{greenwald1990svdb}.
+
+\subsection{Latent replay under embedded constraints}
+
+Latent replay stores features extracted by a frozen prefix of a network
+\cite{pellegrini2020latent}. Quantized latent replay has been demonstrated on
+TinyML platforms and motivates joint selection of replay precision and replay
+location \cite{ravaglia2021tinyml}. On-device training within a few hundred
+kilobytes has also been shown for vision backbones \cite{lin2022ondevice}. These
+results largely concern convolutional architectures whose feature maps shrink
+with depth. Our replay-point cliff is architecture-specific: transformer tokens
+can be several times \emph{larger} than the raw ECG window, so ``replay deeper
+to save memory'' does not hold.
+
+Budget-aware replay with an explicit plasticity trade-off has recently appeared
+for vision continual learning \cite{zhang2026amrecl}, and memory--latency--accuracy
+trade-offs for latent replay have been characterized on extreme-edge RISC-V nodes
+\cite{ravaglia2020memlatacc} from the same lineage as our base model's platform.
+Our study differs in three ways: the replay-cost non-monotonicity is a property
+specific to an expand-then-pool ECG tokenizer rather than a general depth trend,
+the setting is patient-specific ECG adaptation rather than class-incremental
+vision, and the constraint is a byte-exact persistent-state budget rather than a
+bit-precision or feature-map allocation.
+
+\subsection{Source-free and test-time adaptation}
+
+A parallel line of work adapts a trained model to a shifted target distribution
+without labels, either by entropy minimization over test batches
+\cite{wang2021tent} or by source-hypothesis transfer \cite{liang2020shot}. These
+methods are attractive on a device because they need no annotation, but they
+adapt statistics and affine parameters rather than allocating a fixed memory
+budget, and they do not address the class-imbalance problem that dominates
+minority-class ECG performance. Our setting is deliberately the supervised one:
+we assume a short labelled prefix, which is the assumption under which the
+patient-specific ECG literature operates, and ask how to spend bytes given it.
+
+\subsection{Continual-learning regularization}
+
+Elastic weight consolidation penalizes changes to parameters estimated to be
+important for previous tasks \cite{kirkpatrick2017overcoming}. Under our
+accounting, storing a full-model FP32 parameter anchor plus a Fisher value
+requires $6643\times8=53{,}144$ bytes, already above the nominal 16\,KiB
+ceiling before any replay. The same arithmetic applies to synaptic
+intelligence \cite{zenke2017si}; distillation-based approaches such as learning
+without forgetting \cite{li2018lwf} avoid the anchor but require a copy of the
+source model's outputs, and gradient-projection methods \cite{lopezpaz2017gem}
+still keep an episodic memory. This establishes infeasibility only for
+\emph{full-model} FP32 regularization under the stated assumptions; restricted or
+compressed regularization remains a valid future baseline and we do not claim
+that regularization is universally infeasible. Work on very small episodic
+memories \cite{chaudhry2019tiny} suggests that the replay side of this trade-off
+degrades gracefully, which is consistent with what we measure.
+
+Regularization has also been brought inside the low-rank setting directly.
+Zheng et al.\ propose \textbf{EWC-LoRA} \cite{zheng2026ewclora}, which
+regularizes a \emph{shared} low-rank update with a Fisher-based importance
+estimate, keeping storage and inference cost constant as tasks accumulate. That
+is the closest published method to the regularization arm of our study, and the
+comparison is worth stating precisely rather than by omission. Zheng et al.\
+study Fisher-based regularization of shared low-rank updates in
+\emph{task-sequential} vision and language continual learning. Our setting
+instead asks how replay and trainable depth should share a \emph{kilobyte-scale
+persistent-state budget} for patient-specific ECG adaptation, where the binding
+constraint is bytes rather than task count. \textbf{We do not implement
+EWC-LoRA}, and therefore restrict our regularization comparison to the tested
+$B$-factor anchor (Section~\ref{sec:reg}); we make no claim about how EWC-LoRA
+would perform under a 16\,KiB ceiling, and note that a Fisher estimate is itself
+a persistent-state cost that would have to be charged against the budget.
+
+\subsection{Parameter-efficient adaptation}
+
+LoRA freezes the original weight matrix and learns a low-rank update
+\cite{hu2022lora}. Although introduced for large language models, the mechanism
+is equally useful when the goal is to preserve a tiny inference model while
+exposing only a few trainable parameters and their optimizer state. Transformer
+continual-learning methods such as DyTox reduce task-specific parameter growth
+\cite{douillard2022dytox}, and bottleneck adapters achieve the same end by
+inserting small trainable modules into a frozen backbone
+\cite{houlsby2019adapters}. On the systems side, TinyTL observes that trainable
+\emph{parameter} count is the wrong memory target because activations dominate
+\cite{cai2020tinytl}, and on-device training has been demonstrated within a few
+hundred kilobytes \cite{lin2022ondevice} on runtimes such as TensorFlow Lite
+Micro \cite{david2021tflitemicro}, whose workloads the MLPerf Tiny suite
+standardizes \cite{banbury2021mlperftiny}. The problem has stayed active: recent
+TinyML continual-learning work adapts model \emph{size} to the task and distils
+the retained set rather than storing raw exemplars \cite{ruib2024tinyml}, and a
+2025 survey of replay-based continual learning on edge hardware confirms that
+the binding constraint in practice is how much history fits in memory rather than
+which replay rule is used \cite{replay2025survey} --- which is the premise this
+paper takes to its conclusion by making the byte budget the independent variable.
+Parameter-efficient adaptation of ECG foundation models, including LoRA, is now
+surveyed as a standard branch \cite{ecgfoundation2024survey}, but at a parameter
+scale far above the microcontroller regime studied here. Our accounting is the persistent-state
+complement to that observation: we bound what must be \emph{retained} between
+updates rather than what peaks during one. None of this work studies the
+ECG-specific replay-depth discontinuity under a kilobyte-scale payload budget.
+
+\subsection{Replay selection}
+
+Replay performance depends on which exemplars are retained. Herding,
+gradient-based selection, and bilevel coreset optimization are representative
+approaches \cite{rebuffi2017icarl,tiwari2022gcr,borsos2020coresets}. Selection
+quality matters, but our evidence shows that a prior question must be answered
+first: \emph{how much of the budget should be spent on replay at all}, versus on
+representation plasticity? We therefore hold the selection policy fixed and vary
+the allocation between replay volume and trainable depth.
+
+\subsection{Class imbalance in minority-beat classification}
+
+Supraventricular and fusion beats are rare, and the source model's failure on
+them is what patient adaptation must repair. Re-weighting by effective sample
+number \cite{cui2019classbalanced} and focal loss \cite{lin2017focal} are the
+standard remedies; we use both to build the class-reweighted source
+variants of RQ5, in order to test whether our adaptation gain is merely
+compensating for a weak source rather than adding anything.
+
+\subsection{What is new here, and what is not}
+
+We want to be explicit about the boundary. Low-rank adaptation
+\cite{hu2022lora}, replay \cite{rebuffi2017icarl}, latent replay
+\cite{pellegrini2020latent}, patient-specific ECG classification
+\cite{hu1997patient,kiranyaz2016realtime}, and the tiny ECG transformer
+architecture itself \cite{busia2025tiny,vaswani2017attention} are all
+established, and none of them is claimed as a contribution of this paper.
+
+What is new is their \emph{fixed-byte co-design}: measuring that replay cost is
+non-monotonic in depth for a tiny ECG transformer, formulating a single
+persistent-state budget that replay volume and trainable depth must share,
+generating budget-matched configurations from that constraint, and evaluating the
+resulting allocation under controlled patient-sequential adaptation. To our
+knowledge the allocation question --- given a fixed number of bytes, how much
+should be spent on remembering the source versus on the freedom to change the
+representation --- has not been posed for this class of model.
+Table~\ref{tab:relwork} places the present work against the closest prior
+studies.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Positioning against representative prior work. ``Budget'' is an explicit
+byte constraint on retained adaptation state, not a parameter count.}
+\label{tab:relwork}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lccll@{}c@{}}
+\toprule
+Work & ECG & Pt.-spec. & Replay & Trainable scope & Byte budget \\
+\midrule
+Hu \cite{hu1997patient}                  & yes & yes & ---            & patient expert  & no \\
+de Chazal \cite{dechazal2004automatic}   & yes & no  & ---            & full model      & no \\
+Kiranyaz \cite{kiranyaz2016realtime}     & yes & yes & ---            & full 1-D CNN    & no \\
+Hannun \cite{hannun2019cardiologist}     & yes & no  & ---            & full model      & no \\
+Pellegrini \cite{pellegrini2020latent}   & no  & no  & latent         & partial net     & no \\
+Ravaglia \cite{ravaglia2021tinyml}       & no  & no  & quant.\ latent & partial net     & yes \\
+Lin \cite{lin2022ondevice}               & no  & no  & ---            & sparse layers   & peak \\
+Hu \cite{hu2022lora}                     & no  & no  & ---            & low-rank        & no \\
+Busia \cite{busia2025tiny}               & yes & no  & ---            & inference only  & infer.\ \\
+\midrule
+\textbf{This work} & yes & yes & raw $+$ post-pool & head / adapter / LoRA
+ & \textbf{persist.} \\
+\bottomrule
+\end{tabular}
+\end{table}

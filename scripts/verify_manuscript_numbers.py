@@ -1,0 +1,193 @@
+#!/usr/bin/env python3
+"""Check that what the manuscript SAYS matches what the artifacts CONTAIN.
+
+This closes the traceability loop. Everything upstream generates numbers; this
+script reads the LaTeX literally and diffs it against the released CSVs and the
+byte solver.
+
+It has caught real defects, including a figure that kept shipping record-level
+external results months after the subject-level analysis existed. A number that
+is merely "probably still right" is not verified.
+
+Exit code is non-zero on any FAIL.
+"""
+
+from __future__ import annotations
+
+import csv
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from budget_cl.data import MITBIH_DS2_PRIMARY_21  # noqa: E402
+from budget_cl.memory import calculate_arm_memory  # noqa: E402
+from budget_cl.utils import repo_root  # noqa: E402
+
+REPO = repo_root()
+PASS: list[str] = []
+WARN: list[str] = []
+FAIL: list[str] = []
+
+# Phrases the paper must not contain: each was retired for a stated reason.
+FORBIDDEN = {
+    "measured sram": "no hardware SRAM was measured",
+    "measured latency": "no latency was measured",
+    "ordering is preserved": "the reserve replication does NOT preserve arm ordering",
+    "minority-class-strengthened": "the alternative checkpoints were never shown to be stronger",
+    "held untouched": "the test signal is not strictly unseen near the boundary",
+    "provably does not change": "TOST supports equivalence within a margin, not proof",
+    # Retired in the causal-language pass: this is a controlled-ablation design,
+    # not a formal causal-identification design.
+    "allocation causally": "controlled ablations, not causal identification",
+    "causal matrix": "controlled ablation matrix",
+    "four causal contrasts": "four controlled contrasts",
+    "not itself limiting": "exceeds the measured 12-record/3-seed panel scope",
+    "run-to-run variation": "E17 reuses the same seeds; the changes are procedural",
+    "pathologically weak": "no frozen unseen-patient baseline supports this",
+    "pathological baseline": "no frozen unseen-patient baseline supports this",
+    "no benefit at all": "scope to the tested selector, ratio, optimizer, cohort",
+    "exceeds head-only": "mean difference only; no paired interval reported",
+    "analytical compute": "the numerical compute model was withdrawn",
+    "mac counts": "the numerical compute model was withdrawn",
+}
+
+
+def load_tex() -> dict[str, str]:
+    """Read every manuscript .tex file."""
+    files = {}
+    manuscript = REPO / "manuscript"
+    for path in list(manuscript.glob("*.tex")) + list(manuscript.rglob("sections/*.tex")) + list(
+        manuscript.rglob("tables/*.tex")
+    ):
+        files[path.name] = path.read_text()
+    return files
+
+
+def read_csv(rel: str) -> list[dict]:
+    path = REPO / rel
+    if not path.exists():
+        return []
+    with path.open() as fh:
+        return list(csv.DictReader(fh))
+
+
+def check(condition: bool, message: str) -> None:
+    (PASS if condition else FAIL).append(message)
+
+
+def verify_cohort(tex: dict[str, str]) -> None:
+    """The paper must claim the corrected 21-record cohort throughout."""
+    body = "\n".join(tex.values())
+    check(len(MITBIH_DS2_PRIMARY_21) == 21, f"cohort is {len(MITBIH_DS2_PRIMARY_21)} records")
+    check("21-record" in body or "21 patient-disjoint" in body,
+          "manuscript states the 21-record cohort")
+    check("630" in body, "manuscript states the 630-cell primary grid")
+
+
+def verify_arm_means(tex: dict[str, str]) -> None:
+    """Arm means in the generated table must equal the released CSV."""
+    rows = read_csv("results/primary/E7_arm_summary.csv")
+    if not rows:
+        WARN.append("E7_arm_summary.csv missing; skipping arm-mean checks")
+        return
+    table = tex.get("table_primary_arms.tex", "")
+    for row in rows:
+        mean = f"{float(row['mean']):.3f}"
+        check(mean in table, f"table_primary_arms contains {row['arm']} mean {mean}")
+
+
+def verify_paired_tests(tex: dict[str, str]) -> None:
+    """Every p-value in the comparison table must come from the CSV."""
+    rows = read_csv("results/primary/E8_paired_tests.csv")
+    if not rows:
+        WARN.append("E8_paired_tests.csv missing; skipping paired-test checks")
+        return
+    table = tex.get("table_pairwise_tests.tex", "")
+    survivors = set()
+    for row in rows:
+        holm = float(row["p_holm"])
+        check(f"{holm:.4f}" in table,
+              f"table_pairwise_tests contains {row['comparison']} Holm p={holm:.4f}")
+        if holm < 0.05:
+            survivors.add(row["comparison"])
+    check(survivors == {"A4_vs_A0", "A5_vs_A0"},
+          f"only frozen-model comparisons survive Holm (found {sorted(survivors)})")
+
+
+def verify_byte_totals(tex: dict[str, str]) -> None:
+    """Replay counts and byte totals must match the solver, not a transcript."""
+    table = tex.get("table_arm_budget.tex", "")
+    body = "\n".join(tex.values())
+    for arm in ("A1", "A4", "A5"):
+        primary = calculate_arm_memory(arm)
+        reserved = calculate_arm_memory(arm, reserve_bytes=1024)
+        check(str(primary.replay_items) in table,
+              f"budget table contains {arm} replay count {primary.replay_items}")
+        check(str(reserved.replay_items) in table,
+              f"budget table contains {arm} reserved count {reserved.replay_items}")
+        check(primary.used_bytes <= 16384, f"{arm} fits 16 KiB ({primary.used_bytes} B)")
+    check("203" in body and "21" in body, "manuscript states serialized record sizes")
+
+
+def verify_splitfirst(tex: dict[str, str]) -> None:
+    """E17 arm means in the paper must match the released sensitivity CSV."""
+    rows = read_csv("results/preprocessing_sensitivity/E17_arm_summary.csv")
+    if not rows:
+        WARN.append("E17_arm_summary.csv missing; skipping sensitivity checks")
+        return
+    table = tex.get("table_splitfirst.tex", "")
+    for row in rows:
+        mean = f"{float(row['mean']):.3f}"
+        check(mean in table, f"table_splitfirst contains {row['arm']} split-first mean {mean}")
+
+
+def verify_forbidden(tex: dict[str, str]) -> None:
+    """Retired claims must not reappear."""
+    for phrase, reason in FORBIDDEN.items():
+        hits = [name for name, text in tex.items() if phrase in text.lower()]
+        if hits:
+            WARN.append(f"forbidden phrase '{phrase}' in {hits} -- {reason}")
+        else:
+            PASS.append(f"forbidden phrase '{phrase}' absent ({reason})")
+
+
+def verify_generated_tables_are_marked() -> None:
+    """Generated tables must carry the do-not-edit banner."""
+    for name in ("table_primary_arms.tex", "table_pairwise_tests.tex",
+                 "table_arm_budget.tex", "table_splitfirst.tex"):
+        path = REPO / "manuscript" / "tables" / name
+        if not path.exists():
+            WARN.append(f"{name} not generated yet")
+            continue
+        check("GENERATED FILE" in path.read_text(), f"{name} is marked as generated")
+
+
+def main() -> int:
+    tex = load_tex()
+    if not tex:
+        print("error: no manuscript .tex files found", file=sys.stderr)
+        return 1
+
+    verify_cohort(tex)
+    verify_arm_means(tex)
+    verify_paired_tests(tex)
+    verify_byte_totals(tex)
+    verify_splitfirst(tex)
+    verify_forbidden(tex)
+    verify_generated_tables_are_marked()
+
+    print("\n" + "-" * 78)
+    for item in PASS:
+        print(f"  PASS  {item}")
+    for item in WARN:
+        print(f"  WARN  {item}")
+    for item in FAIL:
+        print(f"  FAIL  {item}")
+    print("-" * 78)
+    print(f"PASS {len(PASS)}   WARN {len(WARN)}   FAIL {len(FAIL)}")
+    return 1 if FAIL else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

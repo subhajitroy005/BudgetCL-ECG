@@ -1,0 +1,33 @@
+\begin{table}[H]
+\centering
+\small
+\caption{Label-budget recovery on the 21-record patient-disjoint cohort (5 seeds).
+``Cohort'' is the ratio of mean gains, the figure usually quoted; $R_K$ is the
+per-patient ratio $(M_K - M_0)/(M_{500} - M_0)$. The per-patient \emph{mean} is
+unstable at small $K$ --- patients whose 500-label gain is near zero give a
+near-zero denominator --- so the median and the fraction clearing $R_K \ge 0.8$
+are the meaningful summaries. The last two columns split patients by whether the
+adaptation window contained the arrhythmia class that later appears in the test
+window.}
+\label{tab:recovery}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lrrrrrrr}
+\toprule
+Policy & $K$ & Cohort & Mean $R_K$ & Median $R_K$ & $R_K \ge 0.8$ & $R_K$ covered & $R_K$ not \\
+\midrule
+\multirow{5}{*}{Class-aware oracle}
+ & 25  & 0.582 & $-0.75$ & 0.27 & 19\% & $-0.47$ & $-0.94$ \\
+ & 50  & 0.716 & $-0.03$ & 0.61 & 38\% & $0.31$  & $-0.25$ \\
+ & 100 & 0.832 & $0.57$  & 0.67 & 38\% & \textbf{0.82} & 0.41 \\
+ & 200 & 0.931 & $1.08$  & 0.94 & 52\% & $0.66$  & 1.37 \\
+ & 500 & 1.000 & $1.00$  & 1.00 & 100\% & 1.00   & 1.00 \\
+\midrule
+\multirow{5}{*}{Repeated random}
+ & 25  & 0.541 & $-0.56$ & 0.29 & 24\% & $-2.61$ & $-0.36$ \\
+ & 50  & 0.643 & $0.02$  & 0.38 & 29\% & $0.17$  & $-0.02$ \\
+ & 100 & 0.784 & $0.53$  & 0.66 & 29\% & 0.65    & 0.50 \\
+ & 200 & 0.885 & $1.01$  & 0.84 & 52\% & 0.94    & 1.03 \\
+ & 500 & 1.000 & $1.00$  & 1.00 & 100\% & 1.00   & 1.00 \\
+\bottomrule
+\end{tabular}
+\end{table}

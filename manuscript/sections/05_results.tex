@@ -1,0 +1,851 @@
+\section{Results}
+\label{sec:results}
+
+We organize the evidence around seven research questions.
+\textbf{RQ1:} where is replay memory-compressing? \textbf{RQ2:} does encoder
+plasticity improve patient adaptation? \textbf{RQ3:} is the gain caused by
+replay, plasticity, or both? \textbf{RQ4:} is the 16\,KiB operating point itself
+a limitation? \textbf{RQ5:} does the result survive a class-reweighted
+source model? \textbf{RQ6:} does it transfer across databases? \textbf{RQ7:} how
+many labels are required?
+
+\paragraph{Which results are pre-specified.} RQ1--RQ3 and the source-domain
+change analysis follow a pre-specified plan: the primary metric (per-patient
+\macrof{} over present N/S/V classes), the unit of analysis (patient), the
+all-DS2 cohort, the seed count, the paired test, the effect size, and the
+six-comparison Holm family were all fixed in a written analysis plan before the
+final runs, and the six comparisons reported in Table~\ref{tab:pairwise_tests}
+are exactly that pre-specified family with no additions. \textbf{One departure
+from a strict reading of ``pre-specified'' must be stated:} record 202 was
+excluded \emph{after} the subject-identity audit described in
+Section~\ref{sec:protocol}, and every affected analysis was rerun. The exclusion
+changed the cohort, not the methods --- no metric, test, effect size, or
+comparison family was altered in response to seeing results. RQ4--RQ7 are \textbf{secondary and exploratory}: they were specified
+after the primary analysis, they use reduced panels or different cohorts, and
+their $p$-values are not part of the corrected family. We flag the cohort and
+seed count at the head of each secondary subsection because they differ.
+
+\subsection{RQ1 --- The replay-point cliff}
+
+\textbf{Takeaway:} only the post-pool representation is storage-compressive;
+every intermediate tap is several times larger than the raw beat, so the
+architecture fixes \emph{where} replay can be cheap.
+
+The cliff is a deterministic property of the architecture
+(Table~\ref{tab:replay_bytes}, Fig.~\ref{fig:cliff}). A raw beat costs 198\,B,
+the convolution/encoder tokens $1{,}056$\,B ($5.3\times$), the FFN hidden tensor
+$8{,}448$\,B ($42.7\times$), and only the post-pool$+$RR vector is smaller at
+18\,B ($0.09\times$). Consequently, the frozen source model can afford 705
+post-pool exemplars but only 62 raw exemplars in the same 16\,KiB
+(Table~\ref{tab:arm_definitions}). RQ1 confirms that the cliff constrains
+\emph{where} replay is cheap; the remaining questions ask whether cheap replay
+is the best use of the budget.
+
+\subsection{RQ2 --- Patient-level adaptation gain}
+
+\textbf{Takeaway:} both encoder-LoRA arms beat the frozen model with a large
+effect (Holm $p\le0.008$) and improve 17 of 21 patients, against 12 of 21 for
+maximum head-only replay, with stronger pooled minority-class performance.
+
+Table~\ref{tab:primary_arms} reports the all-DS2 primary result: per-patient
+\macrof{} (seeds averaged), the number of patients improved versus A0, and
+pooled S-class F1. Both encoder-LoRA arms dominate the frozen model and improve
+the most patients. A5 reaches the best per-patient mean ($0.809\pm0.179$) and A4
+the same 17/21 improved count with a slightly lower mean ($0.803\pm0.170$); by
+contrast, maximum-volume head-only replay (A1) improves only 12/21 patients
+despite storing $\approx 11\times$ more exemplars. Fig.~\ref{fig:primary} shows
+the per-patient distribution and Fig.~\ref{fig:waterfall} the sorted per-patient
+gain; both make clear that the mean is carried by a minority of patients.
+
+\paragraph{Patient safety, and what the improvement counts do and do not mean.}
+Aggregate means hide the fact that adaptation is not uniformly beneficial, so we
+report the harm side explicitly, and we report it at two thresholds because the
+choice of threshold changes the story materially.
+
+Counting any decline as harm, the encoder arms harm 4 of 21 patients and
+maximum head-only replay harms 8, which makes the encoder arms look safer.
+That impression does not survive a meaningful threshold. Defining the harm rate
+$R_{\mathrm{harm}} = |\{p : G_p < -\epsilon\}| / P$ with $\epsilon = 0.02$
+stated before analysis, the counts become A1 $0/21$
+($R_{\mathrm{harm}} = 0.000$), A2 $1/21$, A3 $2/21$, A4 $2/21$, and A5 $2/21$
+(Table~\ref{tab:harm}) --- so on this measure \textbf{maximum head-only replay is
+the \emph{safest} arm}, harming nobody measurably, while the encoder arms each
+harm two patients. \textbf{Most of the apparent harm
+advantage of the encoder arms is sub-threshold noise}: at $\epsilon = 0.02$ the
+adapted arms harm zero (A1) to two (A3, A4, A5) patients each. The same correction
+applies to the improvement counts: the headline 17/21 for A4 and A5 falls to
+12/21 when small changes are excluded, against 11/21 for A1. The encoder arms
+remain ahead on the improvement count, but by one patient rather than five, and
+they are \emph{worse} on the harm count. What separates them is the size of the
+tail loss rather than its frequency: A4's worst patient loses $0.034$ where A3's
+loses $0.052$ and A5's $0.123$.
+
+We keep the threshold-free counts in Table~\ref{tab:primary_arms} because they
+are what the pre-specified plan defined, and report the thresholded counts beside
+them so that neither is read alone. Either way the practical conclusion is the
+same: personalization helps most patients, measurably harms a few, and a
+deployment would need a per-patient acceptance check --- adapt, evaluate on
+held-out adaptation-side data, and fall back to the frozen model if the gain is
+not positive --- rather than an assumption that adaptation always helps.
+
+\input{tables/table_harm}
+
+\input{tables/table_primary_arms}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{fig_patient_distribution.pdf}
+\caption{Per-patient \macrof{} across the 21-record primary cohort (five seeds
+averaged within patient, so each point is one patient). Boxes show the median
+and interquartile range; grey lines follow a single patient across arms. The
+encoder-LoRA arms (A4, A5) shift the distribution upward, but the spread is
+wide and heavily patient-dependent: the mean gain is not evenly distributed.}
+\label{fig:primary}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{fig_patient_waterfall.pdf}
+\caption{Per-patient gain against the frozen model, sorted, for maximum
+head-only replay (A1) and rank-1 encoder LoRA (A4) on the primary cohort. The
+grey band is the meaningful-change threshold $|\Delta| \le 0.02$ \macrof{};
+bars inside it are indistinguishable from no change, and red bars are harmed
+patients. A small number of patients contribute most of the mean gain. At
+$\epsilon = 0.02$ the encoder arm (A4) harms two patients while maximum
+head-only replay (A1) harms none.}
+\label{fig:waterfall}
+\end{figure}
+
+Pooled beat-level behavior tells the same story on minority classes
+(Table~\ref{tab:pooled}, Fig.~\ref{fig:class}). The frozen model labels the
+overwhelming majority of pooled S beats as normal (S F1 $=0.145$); every
+adaptation arm recovers S, but the encoder arms are strongest, reaching S F1
+$0.832$--$0.835$ and lifting fusion (F) F1 from $0.000$ to $0.578$--$0.604$ where
+the post-pool arms stall near $0.39$. Pooled accuracy rises from $0.873$ (A0) to
+$0.974$ (A5).
+
+\begin{table}[H]
+\centering
+\small
+\caption{Pooled beat-level performance over the 21-record primary cohort
+($32{,}768$\,N / $1{,}385$\,S / $2{,}564$\,V / $291$\,F test beats). Each
+record contributes its seed-mean confusion matrix, so the supports are test
+beats rather than seed-multiplied decisions. Best in each column in bold.}
+\label{tab:pooled}
+\begin{tabular}{lrrrr}
+\toprule
+Arm & Pooled acc. & S F1 & V F1 & F F1 \\
+\midrule
+A0 & 0.873 & 0.145 & 0.728 & 0.000 \\
+A1 & 0.962 & 0.776 & 0.915 & 0.416 \\
+A2 & 0.960 & 0.786 & 0.904 & 0.395 \\
+A3 & 0.960 & 0.773 & 0.909 & 0.392 \\
+A4 & 0.973 & 0.832 & 0.934 & 0.578 \\
+A5 & \textbf{0.974} & \textbf{0.835} & \textbf{0.938} & \textbf{0.604} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.90\textwidth]{fig_class_specific.pdf}
+\caption{Class-specific pooled performance with the frozen baseline. Adaptation
+concentrates its benefit on the minority S class while preserving N and V;
+encoder arms give the largest minority-class gains. The fusion (F) class is not
+shown here because it is absent from most patients' test segments; pooled F1
+for F is reported in Table~\ref{tab:pooled}, where the encoder arms show their
+largest relative improvement ($0.000 \to 0.58$--$0.60$ against $\approx 0.39$
+for the post-pool arms).}
+\label{fig:class}
+\end{figure}
+
+\paragraph{Direct paired tests.} Table~\ref{tab:pairwise_tests} and
+Fig.~\ref{fig:forest} report the six planned comparisons with Holm correction.
+Both encoder arms significantly beat the frozen model: A4--A0 mean $+0.136$
+(95\% CI $[0.052,0.239]$, Holm $p=0.007$, rank-biserial $0.77$) and A5--A0 mean
+$+0.143$ (CI $[0.051,0.256]$, Holm $p=0.008$, rank-biserial $0.75$). \textbf{Those
+are the only two comparisons that survive Holm correction.} The \emph{direct}
+comparisons against maximum head-only replay are not significant: A4--A1 mean
+$+0.017$ (Holm $p=0.25$) and A5--A1 mean $+0.023$ (Holm $p=0.11$), with intervals
+including zero. A4 versus the rank-2 post-pool adapter A3 is also not significant
+after correction (Holm $p=0.075$); on the contaminated 22-record cohort that
+contrast did clear the threshold ($p=0.047$), and losing it is a direct
+consequence of removing the non-disjoint record. The honest reading
+is that encoder plasticity reaches significance against the frozen baseline
+\emph{where post-pool volume does not}, and improves more patients, but direct
+superiority over maximum replay is \textbf{not} statistically established. This
+supports a replay--plasticity \emph{allocation} frontier rather than
+``depth beats volume.''
+
+\input{tables/table_pairwise_tests}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{fig_pairwise_effects.pdf}
+\caption{Forest plot of the planned paired comparisons (mean paired
+\macrof{} difference, patient bootstrap 95\% CI). Encoder arms clear zero
+against the frozen model (A4--A0, A5--A0) but not against maximum head-only
+replay (A4--A1, A5--A1).}
+\label{fig:forest}
+\end{figure}
+
+\subsection{RQ3 --- Controlled replay-versus-plasticity ablations}
+
+\textbf{Takeaway:} the encoder-plasticity contrast is statistically supported
+(B4$-$B2, $p=0.005$, 16 of 21 patients improved), while replay \emph{volume} is
+not; replay's clearest measured role is source retention, not target gain.
+
+To separate replay location, replay volume, and trainable depth, we run the
+B0--B7 controlled ablation matrix (Table~\ref{tab:causal_ablation},
+Fig.~\ref{fig:causal}).
+Arm means suggest a tidy story: adding raw replay to encoder LoRA lifts mean
+\macrof{} from $0.755$ (B3, LoRA, no replay) to $0.803$ (B4, LoRA $+$ 62 raw), a
+$+0.048$ apparent contribution of \emph{replay beyond plasticity}, while moving
+from a frozen-encoder head at the same raw-replay budget (B2) to encoder LoRA
+(B4) adds $+0.030$ from \emph{plasticity beyond replay}.
+
+\paragraph{Only one of those two contributions survives paired testing.}
+Differences of arm means are not evidence of a per-patient effect, so we test
+each contrast patient-wise (Table~\ref{tab:causal_contrasts}). The plasticity
+contrast is solid: B4$-$B2 gives $+0.030$ with a 95\% interval of
+$[+0.007,+0.063]$ excluding zero, Wilcoxon $p = 0.005$, rank-biserial $0.74$, and
+16 of 21 patients improved against 4 worsened. \textbf{The replay contrast is
+not.} B4$-$B3 has a mean of $+0.047$ but a \emph{median of exactly zero}, an
+interval $[-0.006,+0.112]$ that includes zero, $p = 0.473$, and a 10/11 split
+between patients helped and harmed --- marginally more patients are \emph{worse}
+with replay added than better. Its mean is carried by a handful of patients with
+large gains, not by a consistent effect.
+
+The two remaining contrasts sharpen the paper's central point. Replay
+\emph{volume} does almost nothing: B1$-$B6 compares 705 post-pool exemplars
+against 62 and yields $+0.008$ ($p = 0.232$) with only 5 patients improved and
+\textbf{15 worsened} --- spending an extra 643 exemplars makes three times as
+many patients worse as better. Encoder depth at matched post-pool volume
+(B4$-$B7) is $+0.013$ and also not significant ($p = 0.179$).
+
+We therefore state the controlled comparison result as: \emph{controlled ablations show a
+statistically supported contribution from encoder plasticity, and a positive but
+statistically unsupported mean contribution from replay, with no measurable
+benefit from replay volume.} The earlier framing that replay and plasticity
+``contribute independently'' overstated what the ablations establish, and we do
+not use it. Replay's clearest measured role in this paper is not target gain at
+all --- it is source retention, where its effect is large and consistent
+(Section~\ref{sec:reg} and Section~\ref{sec:srcchange}).
+
+\input{tables/table_causal_contrasts}
+
+\input{tables/table_causal_ablation}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.86\textwidth]{fig_causal_ablation.pdf}
+\caption{Replay-versus-plasticity ablation, arm means only. The apparent
+ordering B4$>$B3 (replay added) and B4$>$B2 (plasticity added) is what mean
+differences suggest, but \textbf{only the plasticity contrast survives paired
+testing}: B4$-$B2 has $p = 0.005$ while B4$-$B3 has $p = 0.473$ with a median of
+essentially zero and a 10/11 patient split. Read this figure together with
+Table~\ref{tab:causal_contrasts}, which carries the uncertainty; the bars alone
+overstate the replay effect.}
+\label{fig:causal}
+\end{figure}
+
+\subsection{Can regularization substitute for replay?}
+\label{sec:reg}
+
+\textbf{Takeaway:} replay provides substantially better source retention than the
+tested zero-byte $B$-factor anchor under the evaluated configuration --- at
+matched bytes the anchor loses about five times as much source performance as
+replay while adapting less. One regularizer was tested, so this is not a
+statement about regularization in general.
+
+\paragraph{What this does and does not say about EWC-LoRA.} The closest
+published method is EWC-LoRA \cite{zheng2026ewclora}, which applies a
+Fisher-based penalty to a shared low-rank update for task-sequential continual
+learning. \textbf{We do not implement it}, so nothing here should be read as a
+comparison against it. Two differences make a direct transfer non-obvious rather
+than merely untested: their setting accumulates \emph{tasks} while ours is
+constrained by \emph{bytes}, and a Fisher importance estimate is persistent
+state that would itself have to be charged against the 16\,KiB ceiling --- a
+diagonal Fisher over even the 223 trainable parameters of A4 is small, but over
+the full 6{,}643-parameter model it is not (Section~\ref{sec:relatedwork}).
+Evaluating EWC-LoRA under a byte budget is the single most relevant extension of
+the regularization arm of this study, and we flag it as such rather than
+claiming the question is closed.
+
+The arms compared so far are all replay-based, which leaves open whether the
+budget would be better spent on a regularizer than on stored exemplars. The
+classical answer, elastic weight consolidation, is infeasible here: a full-model
+FP32 parameter anchor plus a Fisher value costs $6643 \times 8 = 53{,}144$\,B,
+more than three times the entire budget before a single exemplar is stored.
+
+A low-rank adapter admits a much cheaper anchor. The attention delta is $(xA)B$
+with $B$ zero-initialised, so shrinking $B$ pulls the adapted model back toward
+the frozen source function, and it costs \textbf{zero persistent bytes} because
+the anchor \emph{is} the frozen base weight the device already stores for
+inference. The implemented penalty is
+\begin{equation}
+\mathcal{L}_{\mathrm{reg}} = \lambda \sum_{m \in \{q,k,v,o\}} \|B_m\|_F^2,
+\qquad \lambda = 10^{-2},
+\label{eq:anchor}
+\end{equation}
+applied to the $B$ factor of each of the four attention projections. We state one
+caveat plainly, because it bounds the interpretation: the quantity that actually
+determines the function is the product $A_mB_m$, and since
+$A_mB_m = (cA_m)(B_m/c)$, penalising $B_m$ alone constrains the
+\emph{parametrisation} rather than the function. $\|A_mB_m\|_F^2$ is the
+better-posed penalty; Eq.~\eqref{eq:anchor} is what was run, and we report it as
+such rather than describing it as a direct penalty on the source-function
+deviation. This is therefore \textbf{a low-cost memory-matched regularization
+baseline}, not the strongest regularizer the budget admits --- restricted EWC on
+the adapter parameters, source-logit distillation, and output-consistency
+regularization all remain untested. We add two arms: R1 (rank-1 LoRA, anchor, no
+replay), byte-comparable with B3, and R2 (rank-1 LoRA, anchor, 62 raw exemplars),
+byte-identical to A4.
+
+The answer is clear in both directions (Table~\ref{tab:regularization}).
+\emph{As a substitute for replay, the anchor is weak.} Without replay it trades a
+little target gain for a little stability relative to unregularized LoRA
+($0.755 \to 0.744$ target, $\Delta^{\mathrm{src}}$ $-0.159 \to -0.136$). Replay achieves far
+more on both axes at once: A4 reaches $+0.136$ target gain against R1's $+0.078$,
+and holds the source-domain change to $-0.027$ against R1's $-0.136$, so the anchor loses
+about five times as much source performance as replay does, while also adapting
+less. \emph{As a
+complement to replay, the anchor is redundant.} R2 is statistically
+indistinguishable from A4 on target performance ($0.803$ versus $0.803$) and
+improves $\Delta^{\mathrm{src}}$ only from $-0.027$ to $-0.023$.
+
+We take two things from this, both hedged by the caveat above. First, the paper's
+replay-centric framing is not an untested assumption: at this scale, stored source
+exemplars regulate stability substantially better than this parameter-space
+penalty does, which is what one would expect when the shift is a change of patient
+rather than a change of task. Second, the anchor is nearly free, so R2 remains a
+reasonable default for a deployment wanting the small extra retention margin at no
+byte cost. Because only one regularizer was tested, and in its scale-ambiguous
+form, we claim only that \emph{this} anchor does not substitute for replay --- not
+that regularization in general cannot.
+
+\input{tables/table_regularization}
+
+\subsection{RQ4 --- Adam budget sweep for rank-1 and rank-2 adaptation}
+\label{sec:rq4}
+
+\textbf{Takeaway:} within the measured 12-record Adam rank-1/rank-2 panel,
+raising the adaptation-state budget from 8 to 64\,KiB produced no statistically
+detectable benefit (secondary evidence, reduced panel). We do not generalize
+beyond the panel that was measured.
+
+The primary study fixes a single 16\,KiB budget, which raises the obvious
+question of whether the conclusions are an artifact of that particular point. The
+experiment that speaks to it, E10, was designed as a full budget $\times$
+optimizer $\times$ rank grid but was executed only in part, so we name it for
+what was actually measured: an \textbf{Adam budget sweep for rank-1 and rank-2
+adaptation} at 8, 16, 32, and 64\,KiB. The unmeasured dimensions are not
+discussed as results anywhere in this paper.
+
+\paragraph{Scope, stated up front.} This sweep is \textbf{secondary evidence and
+is not comparable to the primary cohort}. Two limitations must be read before the
+numbers. First, to keep the grid tractable it was executed on a reduced panel of
+\textbf{12 DS2 records and 3 seeds} (864 adaptation cells), not the 21-record,
+5-seed primary cohort; absolute values are therefore not interchangeable with
+Table~\ref{tab:primary_arms}, and no cell of this sweep may be ranked against a
+primary-cohort arm. Second, the executed grid is a \emph{subset} of the planned
+design: 49 of 140 planned configurations are measured, 5 are analytically
+infeasible at their budget, and 86 remain unrun. The budget $\times$ scope
+$\times$ rank surface is complete \emph{only for Adam at ranks 1 and 2}; SGD is
+measured at 8\,KiB alone, SGD-with-momentum not at all, and ranks 4 and 8 are
+almost entirely unmeasured (rank 8 is infeasible at 8 and 16\,KiB by the memory
+model).
+
+The single claim this experiment supports is therefore narrow and we state it
+once, here: \emph{within the measured Adam rank-1/rank-2 panel, no statistically
+resolvable improvement was observed when increasing the persistent-state budget
+from 8 to 64\,KiB.} We make \textbf{no optimizer-ranking claim, no rank-4 or
+rank-8 claim, and no claim that the 140-cell design is complete.}
+
+\paragraph{Result: no detectable benefit above 8\,KiB.} Within the Adam panel
+(Table~\ref{tab:e10_adam}, Fig.~\ref{fig:saturation}), raising the budget from 8
+to 64\,KiB does not improve per-patient \macrof{} for any family. The encoder-LoRA
+family is flat-to-declining ($0.805 \to 0.790 \to 0.776 \to 0.768$), the
+post-pool-adapter family varies within $0.762$--$0.780$, and the head-only family
+within $0.762$--$0.774$.
+
+Overlapping confidence intervals are not evidence of equivalence, so we test the
+budget effect directly. Holding optimizer, trainable scope, rank, and replay
+location fixed and varying \emph{only} the budget gives a paired contrast on each
+record; we test each with a Wilcoxon signed-rank test and, for equivalence, with
+a two-one-sided-tests (TOST) procedure against a margin of $\delta = 0.05$
+\macrof{} stated before analysis (Table~\ref{tab:e10_paired}). Of the 18
+budget contrasts, \textbf{14 met the pre-specified $\pm 0.05$ equivalence
+criterion} against their 8\,KiB reference, and none of the raises is
+significantly positive.
+
+\paragraph{Why $\delta = 0.05$, and what the 18 decisions are not.} The margin
+was fixed before analysis at $0.05$ \macrof{} because it is roughly a third of
+the primary adaptation effect this paper is built on (A4$-$A0 $= +0.136$): a
+budget change that moves \macrof{} by less than $\delta$ cannot account for the
+adaptation gain, which is the question the sweep exists to answer. It is a
+within-panel yardstick, not a claim about clinical meaningfulness, and it is
+coarser than the $\epsilon = 0.02$ per-patient harm threshold used in RQ2
+because the sweep panel has 12 records rather than 21 and correspondingly wider
+intervals. \textbf{The 18 TOST decisions are not multiplicity-adjusted.} They
+sit outside the six-comparison Holm family, which was reserved for the primary
+analysis, so each equivalence decision is an uncorrected per-contrast statement
+and the count ``14 of 18'' should be read descriptively. Adjusting would make
+equivalence harder to declare, not easier, so the direction of the resulting
+bias is toward over-claiming equivalence --- another reason we keep the claim
+inside the measured panel.
+
+Two contrasts deserve explicit mention because they cut against a naive
+``more memory is at least harmless'' reading. For rank-2 encoder LoRA, moving
+from 8 to 64\,KiB \emph{significantly reduces} \macrof{} by $0.039$
+(Wilcoxon $p = 0.003$), and the 32\,KiB contrast is also negative
+($-0.027$, $p = 0.027$); neither is equivalent within the margin. The likely
+mechanism is that a raw-replay buffer of several hundred source exemplars starts
+to dominate a 500-beat target set, pulling the adapted model back toward the
+source. We report this as a measured effect on the secondary panel rather than a
+general law.
+
+The defensible reading is a null result of a useful kind, stated at the scope it
+was measured: \emph{within the measured 12-record Adam rank-1/rank-2 panel,
+increasing the adaptation-state budget produced no statistically detectable
+benefit, and for rank-2 encoder LoRA it produced a detectable cost}. On that
+panel, extra persistent memory did not buy accuracy, which is consistent with
+the allocation question studied in RQ2 and RQ3 --- how to spend a fixed budget
+--- being the one that matters. We do not extend this to unmeasured optimizers,
+ranks, or cohorts, and we do not claim that 16\,KiB is provably sufficient in
+general.
+
+\paragraph{A separate low-byte measurement.}\label{sec:lowbyte} Independently of this sweep, a
+fixed-scope run on the \emph{full} 22-record, 5-seed cohort measured a rank-1
+encoder-LoRA configuration holding only \textbf{8 raw replay samples} in
+$5{,}246$\,B --- under a third of the budget --- reaching $0.801$ per-patient
+\macrof{} on the contaminated 22-record cohort, against $0.802$ for the 16\,KiB
+rank-2 arm (A5) on the same cohort. We quote this pair on the 22-record basis
+because that fixed-scope run was not repeated after the cohort correction.
+\textbf{It is therefore a historical sensitivity result and is \emph{not}
+directly comparable with Table~\ref{tab:primary_arms}}, which is computed on the
+corrected 21-record cohort; the two numbers quoted here are internally
+comparable with each other and with nothing else in this paper. Read only within
+itself, the pair is suggestive of the same saturation direction --- a
+third-of-budget configuration landing beside a full-budget one --- but it carries
+no weight against any primary-cohort figure.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Adam budget sweep, rank-1 and rank-2 (E10): best configuration per family at each budget
+(per-patient \macrof{}, N/S/V present classes). \textbf{Reduced secondary panel
+of 12 DS2 records and 3 seeds, Adam only, ranks 1 and 2 --- not comparable to the
+primary cohort of Table~\ref{tab:primary_arms}.} SGD and SGD-with-momentum cells
+are excluded as unmeasured (except 8\,KiB SGD). Formal budget contrasts and
+equivalence decisions are in Table~\ref{tab:e10_paired}; the means here are
+descriptive and should not be read as a ranking.}
+\label{tab:e10_adam}
+\begin{tabular}{lrrrr}
+\toprule
+Family & 8\,KiB & 16\,KiB & 32\,KiB & 64\,KiB \\
+\midrule
+Encoder LoRA $+$ raw replay        & \textbf{0.805} & \textbf{0.790} & 0.776 & \textbf{0.768} \\
+Post-pool adapter $+$ post-pool    & 0.762 & 0.765 & \textbf{0.780} & 0.767 \\
+Head only                          & 0.762 & 0.774 & 0.765 & 0.763 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\input{tables/table_e10_paired}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.80\textwidth]{fig_e10_budget_saturation.pdf}
+\caption{Per-patient \macrof{} versus persistent-state budget for the Adam
+rank-1/rank-2 sweep (E10). \textbf{Secondary cohort: 12 DS2 records, 3 seeds, Adam only, ranks 1 and
+2; not directly comparable to Table~\ref{tab:primary_arms}.} Points are the best
+configuration per family at each budget and shaded bands are 95\% bootstrap
+intervals over records. The bands overlap, but overlap alone is not evidence of
+equality --- the supporting claim is the paired TOST analysis of
+Table~\ref{tab:e10_paired}, in which 14 of 18 budget contrasts are equivalent
+within $\pm 0.05$ \macrof{} and none is significantly positive.}
+\label{fig:saturation}
+\end{figure}
+
+\subsection{Does the result depend on spending the last kilobyte?}
+\label{sec:reserve}
+
+\textbf{Takeaway:} the result does not depend on saturating the budget ---
+reserving 1\,KiB and regenerating replay counts leaves every adapted arm
+significantly above frozen ($p\le0.010$) with encoder adaptation still among the
+top allocations.
+
+Every configuration reported so far fills the 16\,KiB budget almost exactly ---
+A2 reaches $16{,}383$ of $16{,}384$ bytes. That is not a deployable margin: real
+firmware needs room for a version field, a checksum, and future additions, and a
+configuration generated against a ceiling it exactly saturates would break the
+moment anything is added. We therefore re-ran the entire A0--A5 grid, same 21
+records and five seeds, against an effective ceiling of
+$B_{\mathrm{budget}} - B_{\mathrm{reserve}} = 16{,}384 - 1{,}024 = 15{,}360$\,B,
+regenerating replay counts rather than reporting old results against new byte
+figures. The reserve costs A1 49 exemplars, A4 five, and A5 five
+(Table~\ref{tab:arm_definitions}).
+
+The qualitative conclusion is preserved (Table~\ref{tab:reserve}): every adapted
+arm remains significantly above the frozen model ($p \le 0.010$), encoder
+adaptation remains among the top-performing allocations, and A4 is unchanged at
+$0.802$. The \emph{exact} arm ordering is not preserved, and we say so rather
+than claiming otherwise: without the reserve the order is
+$\mathrm{A5} > \mathrm{A4} > \mathrm{A2} > \mathrm{A1} > \mathrm{A3}$, and with it
+$\mathrm{A4} > \mathrm{A1} > \mathrm{A5} > \mathrm{A2} > \mathrm{A3}$. A1 gains
+slightly ($0.786 \to 0.793$) while A5 loses more ($0.809 \to 0.792$). A5 is thus
+more sensitive than A4 to losing the last few replay samples, which supports
+\textbf{rank-1 encoder LoRA as the more robust engineering operating point} --- a
+practical conclusion the unreserved analysis alone would have missed. We keep the unreserved configuration as the primary analysis because it
+is what the pre-specified plan defined, and report the reserve replication as the
+deployable-margin check. \textbf{The primary statistical conclusion is
+unchanged, although the exact ordering and the preferred engineering operating
+point change under the reserve.}
+
+\input{tables/table_reserve}
+
+\subsection{Does the boundary filter dependency matter?}
+\label{sec:splitfirst}
+
+\textbf{Takeaway:} no. Removing the dependency entirely moves every arm mean by
+at most $0.007$ \macrof{}, leaves both encoder-versus-frozen contrasts
+significant at $p = 0.0012$, and leaves both encoder-versus-A1 contrasts
+non-significant. The conclusions are not artifacts of non-causal preprocessing.
+
+The released preprocessing filters each record as a whole before the
+chronological split (Section~\ref{sec:protocol}), so adaptation-side samples
+within the filters' backward reach of the boundary can depend on test-segment raw
+samples. To remove that dependency rather than argue about its size, we rebuilt
+the beat store \emph{split-first}: the raw signal is cut at the boundary, a
+$720$-sample ($2$\,s) guard is discarded from each side --- roughly a sixfold
+margin on the measured $120$-sample influence reach --- and the two pieces are
+filtered independently, so no adaptation-side sample can see a test-side raw
+sample. Beats whose window would straddle the cut are dropped, which costs one to
+three adaptation beats per record; we then truncate every record to a uniform
+$497$-beat adaptation block so the protocol stays balanced.
+
+We reran A0, A1, A4, and A5 on this store over the same 21 patient-disjoint
+records and the same five seeds. Table~\ref{tab:splitfirst} reports the result.
+
+Three things are worth separating. First, the \textbf{frozen arm is unmoved}
+($-0.0000$, largest per-record shift $0.0004$). A0 performs no adaptation, so it
+isolates the effect of refiltering the test segment alone, and that effect is
+numerically negligible --- which is the expected result and a useful check that
+the rebuild did not perturb the evaluation data.
+
+Second, the \textbf{adapted arms move very little, and not in the direction
+leakage would predict}. A1 rises by $0.007$, A4 falls by $0.006$, and A5 is
+unchanged to three decimals. If whole-record filtering had been inflating the
+results, removing it should have lowered them systematically; instead the shifts
+have mixed sign. \textbf{The seeds are identical across the two runs, so these
+are not run-to-run fluctuations.} They reflect the combined effects of the three
+things the rerun actually changes: independent segment filtering, removal of
+boundary-adjacent beats, and reducing the adaptation block from $500$ to $497$
+labelled beats. Their magnitude is too small to alter any inferential
+conclusion.
+
+Third, and most importantly, \textbf{no inferential conclusion changes}.
+Table~\ref{tab:splitfirst_contrasts} recomputes the four contrasts that matter
+on the split-first cohort, reporting both raw and family-corrected $p$-values.
+These four form their own sensitivity family and are \emph{not} pooled with the
+six pre-specified primary comparisons. Both
+encoder arms remain significantly above the frozen model with identical
+improved-patient counts ($17/21$), and the two comparisons against maximum
+head-only replay remain non-significant, so the paper's central refusal to claim
+superiority over A1 is unaffected. The one substantive change is that the
+\emph{margin} over A1 shrinks --- A4$-$A1 falls from $+0.017$ to $+0.004$ and
+A5$-$A1 from $+0.023$ to $+0.017$ --- which weakens the encoder-over-head
+ordering slightly rather than strengthening it. We report that in the direction
+it points: the split-first evidence makes the frontier reading \emph{more}
+appropriate, not less.
+
+This is a sensitivity analysis, not a replacement primary analysis. The headline
+numbers throughout the paper remain those of the released pipeline, so that they
+correspond to the pre-specified plan and to the published artifacts; the
+split-first rerun is reported here as the check that the boundary dependency
+does not carry the result. A fully causal streaming front end --- which would
+also have to replace the zero-phase filter, not merely the record boundary ---
+remains future work.
+
+\input{tables/table_splitfirst}
+
+\input{tables/table_splitfirst_contrasts}
+
+
+\subsection{RQ5 --- Robustness to alternative class-reweighted source checkpoints}
+
+\textbf{Takeaway:} the adaptation gain persists under two alternative
+class-reweighted source-training objectives. This supports robustness to the
+source \emph{objective}, but does \textbf{not} establish robustness to a
+\emph{stronger unseen-patient source model}, which was never demonstrated
+(secondary evidence).
+
+A key robustness question is whether the adaptation gain merely corrects an
+unusually weak S-class source. We train five architecture-identical source
+variants on MIT--BIH DS1 with five seeds---cross-entropy, effective-number class
+weighting, and focal loss $\gamma\in\{1,2,3\}$---and measure them under the same
+protocol (Table~\ref{tab:e11_source_status}).
+
+\paragraph{We do not call these checkpoints stronger, because on the reported
+metric they are not.} Intra-patient DS1 S sensitivity is $0.881$ for plain
+cross-entropy, $0.843$ for focal $\gamma{=}2$, and $0.776$ for effective-number
+weighting: the class-reweighted objectives are \emph{below} the cross-entropy
+baseline on exactly the axis that motivated the concern, and they also cost
+overall \macrof{}. Calling them \emph{stronger source checkpoints} would not be
+supported by these results, so we describe them for what they are ---
+\textbf{alternative source checkpoints trained with class-reweighted
+objectives} --- and treat RQ5 as a test of whether the adaptation result is
+\emph{robust to the choice of source objective}, not as adaptation from a
+stronger starting point.
+
+One further caution: the S sensitivities above are measured on an intra-patient
+DS1 split, whereas the frozen-source weakness that motivates adaptation is an
+unseen-patient DS2 property. These are different domains and we do not compare
+them as if they were the same. Establishing which checkpoint is genuinely
+stronger on unseen patients would require evaluating every variant frozen on DS2,
+which we have not done; that is the experiment RQ5 would need to make a true
+stronger-source claim.
+
+Training five variants is not the same as adapting from five, and we separate
+the two explicitly: all five variants were \emph{trained} and measured for source
+quality (Table~\ref{tab:e11_source_status}), while adaptation was re-run from
+\textbf{two} of them --- effective-number weighting and focal $\gamma{=}2$, the
+two that most change the minority-class behaviour the concern is about
+(Table~\ref{tab:strong_adapt}). The gain survives: adapting from the
+effective-number source lifts per-patient \macrof{} (N/S/V) from $0.458$ (frozen)
+to $0.599$ (both head-only and encoder LoRA), and from the focal-$\gamma{2}$
+source from $0.515$ to $0.642$ (head) and $0.644$ (encoder LoRA). On the
+encoder-versus-head question these two runs say less than they appear to:
+\emph{the mean encoder-minus-head direction remains nonnegative under two
+alternative class-reweighted source objectives, but the margins are small
+($+0.0001$ and $+0.0024$) and no uncertainty is reported}, so they are
+consistent with the primary-cohort finding of a non-significant direct
+comparison rather than independent support for an ordering.
+Adaptation from the remaining three trained
+variants (cross-entropy and focal $\gamma \in \{1,3\}$) is not reported here, so
+we claim only that \emph{the ordering was re-evaluated from two
+class-reweighted source checkpoints}, not from five. The three RR-architecture
+and CNN variants require new model graphs and were never trained; they are
+labeled \texttt{not\_implemented\_not\_run} in the ledger.
+
+\input{tables/table_e11_source_status}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Adaptation from two E11 class-reweighted source checkpoints
+(per-patient \macrof{} over N/S/V, DS2, five seeds). The adaptation gain persists
+under a changed source objective, which is the robustness question RQ5 answers.
+The $\Delta_{\mathrm{A4-A1}}$ column is nonnegative in both cases but the margins
+are small and \textbf{no uncertainty is reported for them}; it must not be read
+as evidence of an encoder-over-head ordering.}
+\label{tab:strong_adapt}
+\begin{tabular}{lrrrr}
+\toprule
+Source-training objective & Frozen & Head (A1) & Encoder LoRA (A4) & $\Delta_{\mathrm{A4-A1}}$ \\
+\midrule
+Effective-number weighting & 0.458 & 0.599 & 0.599 & $+0.0001$ \\
+Focal loss $\gamma=2$       & 0.515 & 0.642 & 0.644 & $+0.0024$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{RQ6 --- Cross-database validation}
+\label{sec:rq6}
+
+\textbf{Takeaway:} per-subject adaptation transfers across databases --- INCART
+($6$ subjects) and SVDB ($46$) both show positive gains, with encoder LoRA again
+with a higher mean than head-only replay on both external subsets
+(secondary evidence, small INCART cohort; no paired direct-comparison interval
+is reported).
+
+External validity is evaluated on INCART (11 recordings from six unique
+subjects) and the MIT--BIH
+Supraventricular Arrhythmia Database (SVDB, 46 records), with a documented
+preprocessing manifest (lead, resampling, R-peak source, beat window, RR
+normalization, AAMI mapping, exclusions). The same chronological,
+target-informed protocol is applied per record. In contrast to a database-level
+aggregate evaluation---which is neutral-to-negative because it performs no
+per-record adaptation---the per-record result is clearly positive
+(Table~\ref{tab:e13_crossdb}, Fig.~\ref{fig:crossdb}).
+
+\paragraph{Statistical unit: unique subjects, not recordings.} INCART contains
+multiple recordings per subject, so a record-level analysis would treat
+non-independent recordings as independent samples. We parsed the subject
+identifier from every INCART header and grouped accordingly: the 11 evaluated
+records collapse to \textbf{six unique subjects} (\texttt{I01--I02} are one
+65-year-old subject, \texttt{I03--I05} a second, \texttt{I06--I07} a third,
+\texttt{I08} a fourth, \texttt{I09--I10} a fifth, and \texttt{I13} a sixth).
+Because the saved cross-database cells retain the source record name, we
+re-aggregated the existing runs to one score per subject---mean over that
+subject's recordings and seeds---and bootstrap over subjects rather than
+recordings. All INCART numbers below are subject-level. SVDB recordings are one
+per subject, so its unit is unchanged. Every configured recording in both
+databases now carries exactly one deterministic disposition
+(Table~\ref{tab:external_manifest}).
+
+\paragraph{What is adapted, and what is aggregated.} These two things are not the
+same and the distinction matters. Adaptation is \textbf{record-wise}: each
+recording starts from the same frozen source checkpoint, adapts on its own early
+chronological segment, and is tested on its own later segment, with the model
+\emph{reset between recordings}. Only the resulting scores are then averaged
+within a subject, and the bootstrap resamples subjects. The correct description
+is therefore \emph{record-wise chronological adaptation, aggregated to the
+subject level for statistical analysis}. We do \textbf{not} carry one persistent
+model across a subject's recordings, so nothing here should be read as evidence
+about a single long-lived patient model that accumulates across sessions. True
+subject-level adaptation---order a subject's recordings chronologically, adapt
+once on the earliest, test on the later ones---is a different and stronger
+experiment, and it is left to future work. Grouping to subjects fixes the
+\emph{independence} defect in the statistics; it does not convert the protocol
+into a longitudinal one.
+
+\paragraph{The external gain survives the correction.} On INCART, subject-level
+\macrof{} (N/S/V) rises from $0.459$ (frozen) to $0.595$ with head-only replay
+($+0.137$, 95\% CI $[+0.058,+0.215]$), $0.618$ with encoder LoRA and raw replay
+($+0.160$, CI $[+0.082,+0.234]$), and $0.647$ with no-replay encoder LoRA
+($+0.189$, CI $[+0.110,+0.264]$); \textbf{6 of 6 subjects improve under every
+method} and no interval includes zero. Collapsing recordings to subjects lowers
+the encoder-LoRA gain from the record-level $+0.194$ to $+0.160$---the
+record-level figure over-weighted the multi-recording subjects---but does not
+change the conclusion. With $n = 6$ the inferential power is limited, so we treat
+the INCART result as descriptive evidence with an interval attached rather than
+as a significance claim.
+
+On SVDB it rises from $0.384$ to $0.580$/$0.610$/$0.626$
+($+0.196$/$+0.226$/$+0.242$), with 45--46 of 46 subjects improved and intervals
+excluding zero (Table~\ref{tab:e13_crossdb}, Fig.~\ref{fig:crossdb}). Two
+observations matter. First, the replay--plasticity ordering \emph{reproduces
+externally and with a larger margin} than on DS2: encoder LoRA beats maximum
+head-only replay by $+0.023$ on INCART and $+0.029$ on SVDB. Second, dropping
+replay entirely yields the \emph{largest} external target gain but also the most
+source-domain change ($-0.11$ on INCART, $-0.14$ on SVDB, versus $\le -0.07$ with
+replay), a textbook stability--plasticity trade-off: under strong domain shift,
+replay trades a little target gain for markedly better source retention.
+
+One caveat is not statistical but selective. The INCART cohort is a
+tractability-capped convenience sample: the configuration attempts only the first
+13 of 75 records, of which one fails preprocessing and one lacks minority-class
+support. The 62 records outside that cap were never attempted, so the INCART
+cohort is not a principled selection from the database and should not be read as
+representative of it. The SVDB cohort is capped at 54 of 78 recordings on the
+same basis, with 8 of the attempted 54 excluded for insufficient S$+$V support in
+the test window.
+
+\input{tables/table_external_manifest}
+
+\input{tables/table_e13_crossdb}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{fig_crossdb_summary.pdf}
+\caption{Subject-level cross-database adaptation on INCART and SVDB. INCART
+recordings are grouped by the subject identifier in the WFDB header, giving six
+unique subjects from 11 recordings; SVDB recordings are one per subject. Every
+target-informed method improves per-subject \macrof{} (N/S/V) over the frozen
+source (dashed line); annotations give the mean paired gain and the fraction of
+subjects improved, and error bars are 95\% bootstrap intervals over subjects.
+Encoder LoRA has a higher mean than head-only replay on both external subsets;
+no paired direct-comparison interval is reported, so this is not a claim of
+statistical superiority. With $n = 6$ the INCART
+panel is descriptive rather than inferential.}
+\label{fig:crossdb}
+\end{figure}
+
+\subsection{RQ7 --- Labeling burden and class coverage}
+\label{sec:rq7}
+
+\textbf{Takeaway:} around 100 labelled beats recover roughly 80\% of the
+cohort-mean adaptation gain, but \emph{which} labels matter more than how many
+--- coverage of the patient's minority class roughly doubles per-patient recovery
+(secondary evidence).
+
+Table~\ref{tab:e12_label_curve} and Fig.~\ref{fig:labels} give the label-budget
+curve for A4 on the primary cohort under class-aware-oracle and repeated-random
+selection at $K \in \{25,50,100,200,500\}$, with patient-bootstrap bands.
+\textbf{The class-aware policy is a deliberately non-deployable oracle: it uses
+knowledge of which classes later appear in the patient's test segment to choose
+which beats to label, and therefore estimates an upper bound on the value of
+class coverage rather than a policy a device could execute.} The random policy
+is the deployable comparator; where the two differ, the gap is the headroom a
+realisable selector would be competing for.
+Measured on \emph{cohort means}, the class-aware policy recovers $0.58$ of the
+500-label gain at 25 labels, $0.72$ at 50, $0.83$ at 100, and $0.93$ at 200;
+random selection recovers $0.54$/$0.64$/$0.78$/$0.89$.
+
+\paragraph{The cohort mean overstates what an individual patient gets.} The
+cohort figure is a ratio of mean gains. The quantity a deployment actually cares
+about is the per-patient recovery ratio
+$R_K = (M_K - M_0)/(M_{500} - M_0)$, and averaging \emph{those} gives a
+noticeably weaker picture (Table~\ref{tab:recovery}). Under class-aware
+selection the median patient recovers $0.27$ at 25 labels, $0.61$ at 50, $0.67$
+at 100, and $0.94$ at 200 --- and \textbf{only $38\%$ of patients individually
+reach $R_K \ge 0.8$ at 100 labels}, rising to just $52\%$ at 200. The per-patient
+\emph{mean} $R_K$ is unstable at small $K$ (it goes negative) because patients
+whose 500-label gain is near zero have a near-zero denominator; we therefore
+report the median and the fraction above threshold rather than the mean.
+
+The defensible claim is consequently the narrow one: \emph{around 100 labelled
+beats recover roughly 80\% of the cohort-mean adaptation gain under the tested
+policies}. It is \textbf{not} true that 100 labels give 80\% of the gain for a
+typical individual patient, and we do not claim that 50 labels suffice.
+
+\paragraph{Which labels matter more than how many.} Splitting patients by
+whether the adaptation window happened to contain the arrhythmia class that
+later appears in the test window is the strongest signal in this experiment. At
+100 class-aware labels, patients with that coverage recover $R_K = 0.82$ on
+average against $0.41$ for those without --- roughly double. Label \emph{budget}
+is therefore the wrong lever to optimize on its own: a small annotated set that
+happens to include the patient's minority beats outperforms a larger one that
+does not, which argues for coverage-aware annotation prompting rather than
+simply asking a clinician for more labels.
+
+\input{tables/table_e12_label_curve}
+
+\input{tables/table_recovery}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth]{fig_label_budget_curve.pdf}
+\caption{Label budget for A4 on the primary cohort, shown two ways because the
+two disagree. \textbf{Left:} cohort-mean \macrof{} with patient-bootstrap 95\%
+bands --- the curve usually reported, on which class-aware selection reaches
+$\approx 80\%$ of the 500-label gain near 100 labels. \textbf{Right:} the
+fraction of \emph{individual} patients whose recovery ratio $R_K$ clears $0.8$
+(dotted line). That fraction is $0.38$ at 100 labels and still only $0.52$ at
+200, so the left panel must not be read as a per-patient guarantee
+(Table~\ref{tab:recovery}).}
+\label{fig:labels}
+\end{figure}
+
+\subsection{Source-domain change}
+\label{sec:srcchange}
+
+\textbf{Takeaway:} tens of raw replay exemplars keep source-domain loss small and
+bounded --- encoder arms do not incur larger source-domain loss than head-only
+arms despite touching the encoder, and no source class collapses.
+
+Across A1--A5 the source-domain \macrof{} change on the held-out DS1 N/S/V
+classes stays within $[-0.048,-0.027]$ (frozen reference $0.946$), and the
+five-class change stays within $\pm0.024$. Encoder arms do not incur larger
+source-domain loss than head-only arms despite touching the encoder: tens of raw
+replay exemplars are enough to anchor it, and no source class collapses. Fig.~\ref{fig:srcchange}
+plots per-configuration target gain against source-domain change; the encoder arms
+sit in the high-gain, small-source-loss region rather than trading one for the
+other.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.80\textwidth]{fig_gain_vs_forgetting.pdf}
+\caption{Target patient \macrof{} gain versus the signed source-domain
+\macrof{} change $\Delta^{\mathrm{src}}$ (Eq.~\ref{eq:gain_and_srcchange}) for
+sweep configurations. $\Delta^{\mathrm{src}}$ is negative when adaptation costs
+source performance, so points nearer the top-right retain more of the source
+while gaining more on the target. Target gains are not bought with a
+proportional source-domain loss; the encoder arms sit near the
+stability--plasticity Pareto edge. The axis is labelled source-domain
+\macrof{} change throughout; we avoid the word ``forgetting'' because the
+quantity measured is a change in DS1 score, not a mechanism.}
+\label{fig:srcchange}
+\end{figure}

@@ -1,0 +1,106 @@
+\section{Experiment Matrix and Reproducibility}
+\label{sec:appendix}
+
+\subsection{Experiment ledger}
+
+The package comprises twelve experiments (E6--E17), summarized below with their
+status in this manuscript. Cohort and seed count are stated because they differ
+between the primary and secondary experiments.
+
+\begingroup
+\small
+\setlength{\LTcapwidth}{\textwidth}
+\begin{longtable}{llp{7.2cm}}
+\caption{Experiment status. ``Primary'' denotes the all-DS2 cohort of 21 patient-disjoint records
+with five seeds; secondary experiments use reduced panels or other databases and
+are never pooled with primary results.}
+\label{tab:exp_status}\\
+\toprule
+ID & Status & Content \\
+\midrule
+\endfirsthead
+\toprule
+ID & Status & Content \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+E6 & complete & Complete persistent-state accounting for $8/16/32/64$\,KiB, Adam/SGD, INT8 replay; every arm asserted $\le 16{,}384$\,B per cell. \\
+E7 & complete (primary) & All-DS2 primary evaluation: 21 patient-disjoint records $\times$ 5 seeds, $\mathrm{gap\_beats}=1$, 630 cells. Record 202 excluded as non-disjoint from DS1 (Section~\ref{sec:cohort}). \\
+E8 & complete (primary) & Six pre-specified paired comparisons with Holm correction, patient-bootstrap CIs, and rank-biserial effects. \\
+E9 & complete (primary) & Controlled replay-versus-plasticity matrix B0--B7 (B5 infeasible at 16\,KiB) plus fixed-count and fixed-scope controls. \\
+E10 & partial (secondary) & \emph{Adam budget sweep for rank-1 and rank-2 adaptation.} Designed as a full budget $\times$ optimizer $\times$ rank grid; executed on a reduced 12-record, 3-seed panel (864 cells) covering Adam at ranks 1--2 only. Of 140 planned configurations, 49 are measured, 5 analytically infeasible, 86 unrun (SGD at 8\,KiB only, SGD-with-momentum absent, ranks 4--8 essentially unmeasured). Supports only the budget-saturation claim of Section~\ref{sec:rq4}; no optimizer or higher-rank claim is made. \\
+E11 & partial & Five class-reweighted DS1 source checkpoints (CE, effective-number, focal $\gamma1/2/3$) \emph{trained} and measured for source quality with 5 seeds. Adaptation was re-run from \textbf{two} of them (effective-number, focal $\gamma{=}2$), so the robustness claim covers two sources, not five. Three RR-architecture/CNN variants \texttt{not\_implemented\_not\_run}. \\
+E12 & complete & Label-budget curve (class-aware and random) with class-coverage and help/harm counts. \\
+E13 & complete (subject level) & Cross-database INCART and SVDB: frozen, head-only replay, encoder-LoRA replay, and no-replay encoder-LoRA. The saved cells retain the external record name, so results were re-aggregated to unique subjects (INCART 11 recordings $\rightarrow$ 6 subjects; SVDB one recording per subject) and bootstrapped over subjects. Itemized inclusion/exclusion manifests accompany both databases. \\
+E14 & complete & Leakage/reproducibility audit (PASS\,11 / FIXED\,1 / ASSESSED\,1 / WARN\,1 / FAIL\,0), split manifests, source checkpoint hash, config package. \\
+E15 & complete (primary) & Memory-matched regularization baseline: rank-1 encoder LoRA with an L2 source anchor $\lambda\sum_m\|B_m\|_F^2$ on the $B$ factor of each attention projection, with (R2) and without (R1) raw replay, 21 records $\times$ 5 seeds, 220 cells. The anchor costs zero persistent bytes because the frozen base weights are the anchor, so R1 is byte-comparable with B3 and R2 with A4. Penalising $B$ rather than the product $AB$ is scale-ambiguous; reported as a low-cost baseline, not the strongest regularizer. \\
+E16 & complete (primary) & Implementation-reserve replication: the full A0--A5 grid re-run against an effective ceiling of $16{,}384 - 1{,}024 = 15{,}360$\,B, which reduces replay counts (A1 $705 \to 656$, A4 $62 \to 57$, A5 $52 \to 47$). 630 cells. Every gain over the frozen model remains significant and encoder adaptation stays among the top allocations; the exact ordering shifts (A5 loses more than A4), making rank-1 the more robust operating point. \\
+E17 & complete (sensitivity) & Boundary-leakage sensitivity rerun. The beat store was rebuilt \emph{split-first}: the raw signal is cut at each record's chronological boundary, a $720$-sample ($2$\,s) guard is discarded from each side against a measured $120$-sample filter influence reach, and the two pieces are filtered independently, so no adaptation-side sample can depend on a test-side raw sample. Arms A0, A1, A4, A5 over the same 21 records $\times$ 5 seeds, 420 cells, $497$ adaptation beats per record. Every arm mean moves by $\le 0.007$ \macrof{}; both encoder-versus-frozen contrasts stay significant ($p = 0.0012$) and both encoder-versus-A1 contrasts stay non-significant (Section~\ref{sec:splitfirst}). \\
+\end{longtable}
+\endgroup
+
+\subsection{Leakage and reproducibility audit}
+
+The audit driver executes twelve automated checks against the released
+configuration and the cached beat store, plus two checks added after the original
+audit missed them: subject disjointness across the DS1/DS2 split, and filter
+support across the chronological boundary. The summary is
+\textbf{PASS\,11 / FIXED\,1 / ASSESSED\,1 / WARN\,1 / FAIL\,0}. Both added checks
+initially failed. The subject-disjointness failure is \emph{resolved} by excluding
+record 202, hence FIXED. The filter-support failure is \emph{characterised rather
+than resolved}: the primary pipeline still filters whole records, and E17
+(Section~\ref{sec:splitfirst}) shows only that removing the dependency changes no
+conclusion --- hence ASSESSED, not FIXED. The warning is reproduced and explained rather than suppressed. We record
+the two misses explicitly because an audit that only ever reports PASS is not
+evidence of anything.
+
+\begingroup
+\small
+\setlength{\LTcapwidth}{\textwidth}
+\begin{longtable}{lp{3.5cm}p{5.4cm}}
+\caption{Audit outcomes and their consequences for the claims in this paper.}
+\label{tab:audit}\\
+\toprule
+Status & Check & Evidence and consequence \\
+\midrule
+\endfirsthead
+\toprule
+Status & Check & Evidence and consequence \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+PASS & DS1/DS2 record-list disjoint & Record-list intersection empty. \\
+\textbf{FIXED} & \textbf{DS1/DS2 \emph{subject} disjoint} & The record lists are disjoint, but records 201 (DS1) and 202 (DS2) are the same subject per 202's WFDB header. All 48 records were audited for this failure mode and 201/202 is the only cross-split pair. Record 202 is now excluded, giving 21 genuinely disjoint evaluation records. This check did not exist in the original audit. \\
+PASS & Beat cache coverage & All configured DS1/DS2 records present in the cache; no silent record drops. \\
+PASS & Cohort selection is outcome-blind & The primary panel equals the configured DS2 list; later-test arrhythmia burden is not used for inclusion. \\
+PASS & Chronological adapt/test split & No record violates ordering; per-record index manifest released. \\
+PASS & No window crosses the boundary & The guard beat prevents centred-window overlap; zero overlaps detected. \\
+\textbf{ASSESSED} & \textbf{Whole-record filter dependency} & The original audit checked beat-window overlap but not filter support. Baseline-wander median filters and the zero-phase low-pass are applied to the whole record before the split, so adaptation-side samples within $\approx 120$ samples of the boundary depend on test-segment raw samples (no test label, beat, normalization statistic, or model-selection signal is involved). Measured influence reach: $84$ samples at $10^{-3}$ relative tolerance, $120$ at $10^{-5}$. \textbf{The primary pipeline retains this dependency}; E17 (Section~\ref{sec:splitfirst}) removes it and shows that no inferential conclusion changes. This check did not exist in the original audit. \\
+
+PASS & RR normalization uses DS1 only & Computed statistics match the stored source statistics to eight decimals. \\
+PASS & No future target statistics & Target RR normalization is called with adaptation-side indices only. \\
+PASS & Early stopping is test-blind & Validation slices are drawn from the adaptation$+$replay union. \\
+PASS & Per-patient reset & Each cell rebuilds from the frozen backbone; no adapted model carries over. \\
+PASS & Source checkpoint pinned & SHA-256 of the DS1 backbone recorded and released. \\
+PASS & Seed count & Primary statistics use seeds $\{42,\dots,46\}$. \\
+WARN & Hyperparameter selection is final-test independent & Values are fixed in a versioned config file, but no automated provenance proves they were chosen without final-test access. Consequence: a residual selection effect cannot be excluded. Mitigation: the same hyperparameters are used for every arm, so the effect applies uniformly and cannot by itself generate the between-arm ordering. \\
+\end{longtable}
+\endgroup
+
+\subsection{Runtime environment}
+
+Results were produced with TensorFlow 2.21.0 on a single NVIDIA RTX 3050 (6\,GiB),
+seeds $\{42,43,44,45,46\}$, over the \texttt{all\_ds2\_primary} cohort (21 patient-disjoint records).
+Derived CSVs, publication figures, and LaTeX tables are regenerated from saved
+run reports by a single driver, so each table and figure in this manuscript is
+reproducible from the released configurations.
+
+\subsection{Extended ledgers}
+
+Tables~\ref{tab:e11_source_status} (source-baseline ledger) and \ref{tab:e13_crossdb}
+(cross-database ledger) are reproduced in Section~\ref{sec:results}. The
+label-budget ledger (Table~\ref{tab:e12_label_curve}) additionally reports the
+\texttt{secondary\_informative\_panel} single-seed measurements, which are
+retained only as secondary evidence and are not used for any headline claim.

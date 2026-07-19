@@ -1,0 +1,18 @@
+% GENERATED FILE -- do not edit by hand.
+% Regenerate with: make tables  (scripts/make_tables.py)
+\begin{table}[H]
+\centering
+\small
+\caption{Boundary-leakage sensitivity (E17). The split-first rerun cuts the raw signal at the boundary, discards a $2$\,s guard each side, and filters the pieces independently, so no adaptation-side sample can depend on a test-side raw sample. \textbf{Every conclusion is preserved.}}
+\label{tab:splitfirst}
+\begin{tabular}{lrrr}
+\toprule
+Arm & Whole-record & Split-first & $\Delta$ \\
+\midrule
+A0 (frozen) & $0.666$ & $0.666$ & $-0.000$ \\
+A1 (head $+$ max replay) & $0.786$ & $0.793$ & $+0.007$ \\
+A4 (LoRA $r{=}1$) & $0.803$ & $0.796$ & $-0.006$ \\
+A5 (LoRA $r{=}2$) & $0.809$ & $0.809$ & $+0.000$ \\
+\bottomrule
+\end{tabular}
+\end{table}

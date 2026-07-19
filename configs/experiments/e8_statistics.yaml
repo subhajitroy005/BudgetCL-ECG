@@ -1,0 +1,20 @@
+experiment_id: E8
+description: Pre-specified paired comparisons on the primary cohort
+
+# This family was fixed in the written analysis plan BEFORE the final runs and
+# is not expanded post hoc.
+paired_test: wilcoxon_signed_rank
+effect_size: rank_biserial
+bootstrap: patient          # seeds averaged first; seeds are NOT resampled
+bootstrap_iterations: 10000
+bootstrap_seed: 20260719
+
+holm_family:
+  - A4_vs_A1
+  - A5_vs_A1
+  - A4_vs_A2
+  - A4_vs_A3
+  - A4_vs_A0
+  - A5_vs_A0
+
+# Only A4_vs_A0 and A5_vs_A0 survive Holm correction.

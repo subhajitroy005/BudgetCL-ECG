@@ -1,0 +1,172 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{The replay-point cliff is not an optimization answer}
+
+The cliff measurement is deterministic: only post-pool replay is smaller than
+the raw input for this architecture. The primary results change its
+interpretation. Compression determines how many exemplars \emph{fit}, but not
+how useful the remaining trainable subspace is. Maximum post-pool replay (A1)
+fixes the representation and buys volume; raw replay is expensive per item but
+leaves budget for attention-level updates. Across all 21 patients, the second
+allocation improves more patients (17/21 versus 12/21) and every pooled
+minority-class metric, even though it stores an order of magnitude fewer
+exemplars. The cliff tells you where you \emph{may} replay; it does not tell you
+where you \emph{should}.
+
+\subsection{Why encoder adaptation may help}
+
+The source model has strong V sensitivity but weak S sensitivity. S
+identification depends heavily on prematurity and RR context, yet the base
+architecture fuses only a two-dimensional RR projection \emph{after} pooling. An
+encoder LoRA update can reshape morphology--context interactions upstream of the
+pool that a replacement linear head cannot reach. The F-class result is
+consistent: post-pool arms plateau near $0.39$ F1 while encoder arms reach
+$0.58$--$0.60$. This remains a mechanistic \emph{hypothesis}. RQ5 is the test that
+speaks to it most directly, and it is weakly consistent with the hypothesis
+rather than confirmatory: starting from sources whose S sensitivity is already
+$0.78$--$0.88$, encoder adaptation still matches head-only replay
+($\Delta_{\mathrm{A4-A1}} = +0.0001$ and $+0.0024$), so the encoder gain is not
+merely an artifact of one weak source objective --- but those margins are small
+and carry no reported uncertainty, so they do not establish an ordering.
+
+\subsection{What the data support}
+
+Supported by the 21-record patient-disjoint, five-seed primary evidence:
+\begin{itemize}[leftmargin=*]
+\item patient-specific, target-informed adaptation improves the primary cohort
+under the analytical 16\,KiB budget;
+\item both encoder-LoRA arms significantly beat the frozen model at patient level
+(Holm $p\le0.008$), with large rank-biserial effects and CIs excluding zero ---
+these are the \emph{only} two of the six pre-specified comparisons that survive
+Holm correction;
+\item encoder arms improve more patients and give better pooled S and F
+performance than maximum head-only replay, with $\approx 12\times$ fewer
+exemplars, though the margin in improved-patient count narrows from six patients
+to two once a meaningful-change threshold is applied;
+\item the target-side benefit is attributable to encoder plasticity (B4$-$B2,
+$p = 0.005$, 16/21 patients); the replay contrast is positive in mean but not
+statistically supported (B4$-$B3, $p = 0.473$, median $\approx$ zero), and replay
+\emph{volume} shows \textbf{no statistically supported target-side benefit
+under the tested selector, replay ratio, optimizer, and patient cohort}
+(B1$-$B6, 5 improved / 15 worsened);
+\item replay provides substantially better source retention than the tested
+zero-byte $B$-factor anchor under the evaluated configuration: at matched bytes,
+replay gives $+0.136$ target gain against the anchor's $+0.078$ while losing
+about a fifth as much source performance ($-0.027$ versus $-0.136$ \macrof{}),
+and the anchor adds nothing once replay is present. Only this one
+scale-ambiguous regularizer was tested, so this does not speak to EWC,
+distillation, output consistency, or a $\|AB\|_F^2$ penalty
+(Section~\ref{sec:reg});
+\item about 100 labeled beats recover $\approx 80\%$ of the \emph{cohort-mean}
+500-label gain, and whether the adaptation window covers the patient's future
+arrhythmia class matters more than the label count (RQ7);
+\item the conclusions do not depend on saturating the budget: re-running the
+whole grid against a $15{,}360$\,B ceiling, i.e.\ holding back a 1\,KiB firmware
+reserve, preserves every significant gain over the frozen model and keeps
+encoder adaptation among the top allocations. The \emph{exact arm ordering is
+not preserved} --- A1 rises to $0.793$ while A5 falls to $0.792$, putting A4
+first --- which is why we read rank-1 as the more robust operating point
+(Section~\ref{sec:reserve}).
+\end{itemize}
+
+Supported by secondary evidence, on reduced panels or other cohorts:
+\begin{itemize}[leftmargin=*]
+\item (RQ4) within the measured 12-record Adam panel at ranks 1 and 2, raising
+the adaptation-state budget from 8 to 64\,KiB produced no statistically
+detectable benefit; 14 of 18 fixed-configuration contrasts met the
+pre-specified $\pm 0.05$ equivalence criterion, uncorrected for multiplicity;
+\item the adaptation gain survives adaptation from two class-reweighted DS1
+sources, of five trained; the encoder-minus-head margins there are nonnegative,
+but they are small and carry no reported uncertainty (RQ5);
+\item chronological target-informed adaptation transfers to two external
+databases at \emph{subject} level, with $+0.14$ to $+0.24$ mean gains on INCART
+($6/6$ subjects) and SVDB ($45$--$46/46$); encoder LoRA has the higher mean on
+both external subsets, without a paired direct-comparison interval (RQ6).
+\end{itemize}
+
+Not supported:
+\begin{itemize}[leftmargin=*]
+\item direct statistical superiority of A4/A5 over A1 on the primary cohort (the
+direct comparisons remain non-significant, and the reweighted-source and
+external margins, while consistently positive, are small);
+\item any optimizer ranking, or any rank-4/rank-8 statement: SGD is measured only
+at 8\,KiB, SGD-with-momentum not at all, and 86 of 140 planned sweep cells are
+unrun;
+\item \emph{inferential} external validity on INCART: the subject-level gain is
+positive with an interval excluding zero, but $n = 6$ subjects supports a
+descriptive reading only, and the cohort is a tractability-capped sample of 13 of
+75 records rather than a principled selection;
+\item RR-architecture and CNN source baselines (three E11 variants still require
+new model graphs);
+\item any hardware runtime, SRAM, latency, or energy claim;
+\item a ``50 labels are sufficient'' claim, or any per-patient reading of the
+label curve: at 100 labels only $38\%$ of patients individually reach $80\%$
+recovery, so the cohort-mean figure must not be read as a per-patient guarantee.
+\end{itemize}
+
+\subsection{Embedded interpretation}
+
+Everything reported here is persistent-state accounting (Appendix~\ref{sec:embedded}
+gives the packed record layouts, the memory-category table, and a qualitative
+discussion of the unmatched compute paths): trainable weights,
+gradients, optimizer moments, replay values, labels, and metadata, packed and
+asserted per configuration. It excludes forward and backward activations, stack
+and workspace, allocator overhead, and DMA buffers, all of which are peak-SRAM
+rather than persistent-state quantities and all of which are implementation- and
+toolchain-specific. The 16\,KiB figure is therefore a statement about what a
+device must \emph{retain} between adaptation steps, not about what it must have
+free at any instant; a hardware study would need to add the runtime terms.
+
+The budget is also accompanied by a firmware implementation reserve. An arm
+consuming 16{,}383 of 16{,}384 bytes is not shippable, so we re-generated all
+configurations against an effective ceiling of 15{,}360\,B and re-ran every arm
+at the reduced replay counts rather than reporting old numbers against new byte
+figures. That costs A1 49 exemplars and the encoder arms five each. It changes no
+significance conclusion, but it does reshuffle the arm ordering --- A5 is the
+arm most sensitive to losing its last few replay samples --- so the reserve
+replication is what identifies rank-1 as the safer engineering choice
+(Section~\ref{sec:reserve}).
+
+There is one cost of the encoder allocation that the byte budget hides. Raw
+replay requires re-forwarding stored beats through the encoder and propagating
+gradients through the LoRA training path, whereas post-pool replay enters the
+graph after the encoder and bypasses it. Encoder adaptation therefore has
+substantially greater compute and energy cost per adaptation step, but
+\textbf{this study does not measure or reliably estimate its magnitude} and we
+quote no ratio (Appendix~\ref{sec:embedded} explains why the earlier analytical
+figure was withdrawn). The arms are matched in bytes and not in compute, which on
+a duty-cycled device is an energy difference a deployment study would have to
+quantify before choosing between them.
+
+The external result adds a nuance to the frozen-replay story: under strong domain
+shift, the no-replay encoder LoRA achieves the \emph{largest} target gain but the
+\emph{most} source-domain change. Replay is therefore best understood not as a pure
+accuracy lever but as a stability regulator whose value grows with the cost of
+source-domain loss.
+
+The regularization comparison sharpens that reading. A parameter-space anchor and
+a replay buffer are both stability mechanisms, but they are not
+interchangeable: the anchor constrains \emph{how far the weights may move},
+whereas replay constrains \emph{what the function must still do}. On a shift that
+is a change of patient rather than a change of task, the second constraint is the
+useful one, and the measurements bear that out --- at equal persistent bytes,
+replay incurs roughly one fifth of the anchor's source-domain loss while also
+adapting further. We hold this to its tested scope: \emph{replay provides
+substantially better source retention than the tested zero-byte $B$-factor
+anchor under the evaluated configuration}. It is one regularizer, in a
+scale-ambiguous form, so it does not license the broader claim that a budget
+should never be spent on regularization --- restricted EWC, source-logit
+distillation, output-consistency regularization, and a $\|AB\|_F^2$ penalty are
+all untested here and could behave differently.
+
+\subsection{Clinical interpretation}
+
+The method is not an autonomous diagnostic system. It assumes supervised labels
+for an early patient segment and evaluates heartbeat classification on curated
+research databases. The strong patient heterogeneity---a few records personalize
+dramatically, most gain modestly, and a minority regress---is itself a clinical
+finding: personalization is unevenly beneficial, and a deployment would need a
+per-patient safeguard rather than a blanket ``adaptation always helps''
+assumption. The results are algorithmic evidence about memory allocation, not
+clinical validation.

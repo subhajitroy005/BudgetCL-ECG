@@ -1,0 +1,24 @@
+# E17 sensitivity: split the RAW signal first, then filter each side alone.
+# No adaptation-side sample can depend on a test-side raw sample.
+name: split_first
+causal: false                 # the filters are still zero-phase WITHIN a segment
+whole_record_filtering: false
+split_before_filtering: true
+
+boundary_guard_samples_each_side: 720   # 2 s at 360 Hz; ~6x the 120-sample reach
+adaptation_labels: 497                  # 500 minus beats straddling the cut
+
+baseline_removal:
+  method: cascaded_median
+  first_median_ms: 200
+  second_median_ms: 600
+
+lowpass:
+  type: butterworth
+  order: 4
+  cutoff_hz: 35
+  zero_phase: true
+
+# Outcome: arm means moved by at most 0.007 macro-F1, with MIXED SIGN -- not
+# the systematic drop recovered leakage would produce. Both encoder-vs-frozen
+# contrasts stayed significant (p = 0.0012); both vs-A1 stayed non-significant.

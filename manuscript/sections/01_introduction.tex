@@ -1,0 +1,94 @@
+\section{Introduction}
+
+Wearable and portable ECG systems collect long-duration cardiac signals outside
+the clinic. A static classifier trained on population data can still perform
+unevenly across patients, because beat morphology, rhythm prevalence, electrode
+placement, and acquisition conditions vary substantially between individuals.
+The problem is most acute for minority arrhythmia classes, whose prevalence is
+small relative to normal beats and whose morphology is patient-specific.
+
+Busia \emph{et al.} proposed a 6{,}643-parameter transformer for low-power
+arrhythmia classification on microcontrollers \cite{busia2025tiny}. Such a model
+is attractive for embedded inference, but deployment-time personalization
+introduces a distinct resource problem. Continual adaptation on the device
+requires \emph{persistent} state: trainable parameters, their gradients,
+optimizer moments, replay exemplars, replay labels, and buffer metadata. Under
+a microcontroller-motivated memory ceiling, these components cannot be designed
+independently, because every byte spent on one is a byte unavailable to the
+others.
+
+Latent replay reduces storage by preserving intermediate representations
+instead of raw samples \cite{pellegrini2020latent,ravaglia2021tinyml}. In many
+convolutional networks, feature-map size decreases with depth, so replaying
+deeper features gives a relatively smooth memory--plasticity trade-off. The
+evaluated ECG transformer behaves differently. Tokenization \emph{expands} the
+signal before pooling collapses it, so the storage cost of a replay exemplar is
+non-monotone in depth. We call this the \emph{replay-point cliff}: only the
+post-pooling representation is smaller than the raw ECG window, and every
+intermediate tap is larger.
+
+The cliff makes an intuitive design choice look optimal: because the post-pool
+vector is $\approx 11\times$ smaller than the raw beat, one can store hundreds
+of post-pool exemplars and adapt only a small classifier head. That intuition is arithmetically correct about
+\emph{where} replay is cheap, but it does not settle \emph{how} the budget should
+be spent. Retaining a small amount of encoder plasticity through low-rank
+adaptation, paired with only tens of raw replay samples, yields stronger pooled
+minority-class performance and more frequent positive patient-level changes than
+maximum-volume post-pool replay at the same ceiling. We do not claim it is
+statistically superior: maximum-volume replay is simply \emph{not established as
+uniquely optimal}, and the budget admits several competitive allocations.
+
+This paper frames the problem as \textbf{replay--plasticity co-design} and
+reports a pre-specified primary evaluation over the full eligible DS2 cohort. Relative to
+an earlier exploratory version restricted to an arrhythmia-informative panel and
+three seeds, every headline number here is computed over all eligible
+patient-disjoint DS2 records (21 after excluding record 202) with five seeds,
+with patient-bootstrap uncertainty, Holm-corrected
+paired tests, and effect sizes. The contributions are:
+
+\begin{enumerate}[leftmargin=*]
+\item an architecture-level measurement of the replay-point cliff and its
+consequence for where replay may be stored (Section~\ref{sec:method});
+\item a complete persistent-state allocation formulation that jointly accounts
+for replay representation, trainable scope, gradients, and optimizer state, and
+a constrained configuration generator that turns a byte budget into a maximum
+replay count (Sections~\ref{sec:method}, \ref{sec:protocol});
+\item a pre-specified patient-level comparison of frozen, head-only, post-pool
+adapter, and encoder-LoRA adaptation over all eligible DS2 patients with five
+seeds. The metric, seed count, paired tests, effect-size definition, and multiplicity
+family were fixed before the final runs. Record 202 was subsequently excluded
+following a subject-identity audit, and all affected analyses were rerun without
+changing the methods (Section~\ref{sec:results});
+\item paired ablations separating replay location, replay volume, and trainable
+depth, which support a plasticity contribution, do not support a direct replay
+contribution, and find no benefit from replay volume
+(Section~\ref{sec:results});
+\item robustness evidence on three axes: an Adam rank-1/rank-2 budget sweep
+showing that a reduced 12-record, three-seed Adam rank-1/rank-2 panel found no
+statistically detectable benefit from increasing the persistent-state budget
+from 8 to 64\,KiB, adaptation from
+two of five trained alternative class-reweighted source checkpoints, and subject-level
+cross-database transfer to INCART and SVDB (Section~\ref{sec:results});
+\item a label-budget analysis quantifying how much supervision patient-specific
+adaptation actually requires (Section~\ref{sec:results});
+\item a memory-matched regularization baseline --- an L2 source anchor on the
+$B$ factor of the low-rank delta that costs zero persistent bytes --- showing
+that replay provides substantially better source retention than this tested
+zero-byte $B$-factor anchor under the evaluated configuration
+(Section~\ref{sec:results});
+\item a leakage and reproducibility audit, and an explicit accounting of what the
+software-only evidence does and does not support---including the
+non-significance of the direct encoder-versus-maximum-replay comparison, the
+partial coverage of the budget grid, and the small subject count on INCART
+(Section~\ref{sec:limitations}).
+\end{enumerate}
+
+We deliberately avoid claiming demonstrated microcontroller deployment. The
+16\,KiB ceiling is an \emph{analytical, hardware-motivated persistent-state
+design constraint}: it covers what a device must retain \emph{between}
+adaptation steps---trainable weights, gradients, optimizer moments, replay
+exemplars, replay labels, and buffer metadata. Peak training SRAM is instead
+dominated by activations (cf. TinyTL~\cite{cai2020tinytl}) and is explicitly
+out of scope and unmeasured here. Runtime latency, energy, and
+nonvolatile-memory endurance are likewise outside the scope of this study and
+are not measured.

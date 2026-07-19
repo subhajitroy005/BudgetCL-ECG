@@ -1,0 +1,48 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+This software study establishes an algorithmic replay--plasticity trade-off for
+memory-constrained, patient-specific adaptation of a tiny ECG transformer, under
+a hardware-motivated 16\,KiB persistent-state constraint. The architecture
+exhibits a deterministic replay-point cliff---tokens and feed-forward tensors
+are several times larger than the raw beat, and only the post-pool
+representation is storage-com\-pres\-sive---which makes maximum-volume post-pool
+replay the naive budget-optimal design. Over all 21 eligible MIT--BIH DS2
+records and five seeds, that naive choice is not established as uniquely optimal:
+rank-1 and
+rank-2 encoder low-rank adapters with only tens of raw replay samples raise
+per-patient \macrof{} from $0.666$ to $0.803$ and $0.809$, improve 17 of 21
+patients (versus 12 of 21 for maximum head-only replay), and are both
+significant against the frozen model (Holm $p\le0.008$) with large effect sizes.
+Paired ablations attribute the target gain to encoder plasticity ($p = 0.005$)
+but leave replay's direct contribution statistically unsupported ($p = 0.473$),
+while replay provides substantially better source retention than the tested
+zero-byte $B$-factor anchor under the evaluated configuration; within the
+measured 12-record Adam rank-1/rank-2 panel, increasing the adaptation-state
+budget from 8 to 64\,KiB produced no statistically detectable benefit, with 14 of
+18 fixed-configuration contrasts meeting the pre-specified $\pm 0.05$ equivalence
+criterion; and source-domain change stays bounded with no class collapse.
+
+The direct comparison between encoder adaptation and maximum head-only replay is
+not statistically significant on the primary cohort, so the honest conclusion is
+a \emph{replay--plasticity allocation frontier} rather than ``depth beats
+volume.'' Encoder plasticity is more consistent and more replay-efficient at the
+same budget, and it carries a higher compute cost; it is not proven strictly
+superior to maximum replay, which is simply not established as uniquely optimal.
+The frontier holds up under stress, with one caveat we state rather than bury:
+the adaptation gain survives when adaptation starts from two class-reweighted
+DS1 source checkpoints (of five trained, with S sensitivity $0.78$--$0.88$),
+though the encoder-minus-head margins there are small and carry no reported
+uncertainty; and the gain reproduces at subject level on two external databases,
+where INCART ($6/6$ subjects) and SVDB ($45$--$46/46$) show $+0.14$ to $+0.24$
+mean gains, with encoder LoRA again showing the higher mean than head-only
+replay. Holding back a
+1\,KiB firmware reserve preserves every gain over the frozen model but reshuffles
+the arm ordering, which is what makes rank-1 the more robust operating point. What remains is well defined: adaptation from the three
+remaining trained source variants, three RR-architecture / CNN variants that were
+never trained, the unrun optimizer and higher-rank cells of the budget grid, a
+larger external cohort than six INCART subjects, and---for the strong
+``plasticity beats volume'' claim---a larger patient cohort that could resolve the
+still-non-significant direct comparison. We make no claim of microcontroller deployment; the budget is
+analytical persistent state, and peak SRAM, latency, and energy are left to
+future hardware-in-the-loop work.

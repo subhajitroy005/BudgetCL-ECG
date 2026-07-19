@@ -1,0 +1,21 @@
+% GENERATED FILE -- do not edit by hand.
+% Regenerate with: make tables  (scripts/make_tables.py)
+\begin{table}[H]
+\centering
+\small
+\caption{Persistent-state accounting per arm. Replay counts are \emph{derived} from the budget, not chosen. ``Reserved'' re-solves each arm against a $15{,}360$\,B ceiling (1\,KiB firmware reserve).}
+\label{tab:arm_definitions}
+\begin{tabular}{lrrrrr}
+\toprule
+Arm & Trainable & Replay & Items & Items & Bytes \\
+    & params    & record & (16\,KiB) & (reserved) & used \\
+\midrule
+A0 & 0 & --- & 0 & 0 & 0 \\
+A1 & 95 & 21\,B & 705 & 656 & 16{,}374 \\
+A2 & 131 & 21\,B & 678 & 629 & 16{,}383 \\
+A3 & 167 & 21\,B & 650 & 601 & 16{,}371 \\
+A4 & 223 & 203\,B & 62 & 57 & 16{,}208 \\
+A5 & 351 & 203\,B & 52 & 47 & 16{,}226 \\
+\bottomrule
+\end{tabular}
+\end{table}

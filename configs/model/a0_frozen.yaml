@@ -1,0 +1,23 @@
+# Frozen source model; reference arm.
+# Replay counts below are DERIVED from configs/memory/*.yaml by
+# budget_cl.memory.budget_solver -- do not hand-edit them.
+arm: A0
+base_checkpoint: checkpoints/source/source_model.keras
+
+trainable:
+  scope: frozen
+  classifier_head: false
+
+trainable_parameters: 0
+
+replay:
+  location: none
+  items: 0
+
+budget:
+  used_bytes_primary: 0
+  used_bytes_reserved: 0
+  budget_bytes: 16384
+
+optimizer:
+  name: adam

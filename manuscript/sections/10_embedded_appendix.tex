@@ -1,0 +1,146 @@
+\section{Persistent-State Serialization and Compute Scope}
+\label{sec:embedded}
+
+This appendix makes every byte in the budget claim reproducible and separates
+what the budget covers from what it does not.
+
+\subsection{What the 16\,KiB covers}
+
+\textbf{The 16\,KiB constraint applies to persistent adaptation state, not to
+peak training SRAM.} Table~\ref{tab:memcats} lists every memory category and its
+status. The included categories are all quantities a device must retain between
+adaptation steps; the excluded categories are transient or implementation
+specific, and none of them is measured in this work.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Memory categories and their treatment. ``Replication only'' marks the
+implementation reserve, which is held back in the reserve replication of
+Section~\ref{sec:reserve} but \emph{not} in the primary configuration. No
+sentence in this paper claims that total training SRAM is 16\,KiB.}
+\label{tab:memcats}
+\begin{tabular}{lccl}
+\toprule
+Memory category & In the 16\,KiB? & Persistent? & Status \\
+\midrule
+Trainable weights          & yes & yes & analytical \\
+Gradients                  & yes & assumption-dependent & analytical \\
+Optimizer moments          & yes & yes & analytical \\
+Replay values              & yes & yes & analytical \\
+Replay labels              & yes & yes & analytical \\
+Buffer and quantization metadata & yes & yes & analytical \\
+Alignment padding          & yes & yes & analytical \\
+Implementation reserve     & replication only & yes & analytical \\
+\midrule
+Forward activations        & no  & no  & unmeasured \\
+Backward activations       & no  & no  & unmeasured \\
+Stack and workspace        & no  & no  & unmeasured \\
+DMA and allocator overhead & no  & no  & unmeasured \\
+Flash write endurance      & no  & --- & unmeasured \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Gradients are marked assumption-dependent because an implementation that applies
+updates immediately per batch need not retain a full gradient vector across
+steps. We include them so the accounting is conservative.
+
+\subsection{Packed replay records}
+
+Replay entries are serialized as fixed-stride packed records. With INT8 replay
+values, the raw record is
+
+\begin{verbatim}
+typedef struct __attribute__((packed)) {
+    int8_t  ecg[198];   /* R-peak-centred beat, INT8            */
+    int8_t  pre_rr;     /* normalised previous RR interval      */
+    int8_t  post_rr;    /* normalised following RR interval     */
+    uint8_t label;      /* AAMI class 0..4                      */
+    uint8_t valid;      /* slot occupancy flag                  */
+    uint8_t class_id;   /* selector bookkeeping                 */
+} replay_raw_t;         /* 203 B packed                          */
+\end{verbatim}
+
+and the post-pool record is
+
+\begin{verbatim}
+typedef struct __attribute__((packed)) {
+    int8_t  pooled[16]; /* post-pool embedding, INT8            */
+    int8_t  pre_rr;
+    int8_t  post_rr;
+    uint8_t label;
+    uint8_t valid;
+    uint8_t class_id;
+} replay_postpool_t;    /* 21 B packed                           */
+\end{verbatim}
+
+Both structures are all-\texttt{int8}/\texttt{uint8}, so the packed size, the
+natural ABI size, and the 1-byte-aligned stride coincide: 203\,B and 21\,B
+respectively. Under 4-byte alignment the strides become 204\,B and 24\,B, and
+under 8-byte alignment 208\,B and 24\,B; we report the 1-byte figures and
+account for the padding explicitly rather than assuming a favorable ABI.
+
+Beyond the per-record fields, each buffer carries fixed metadata: a 4-byte write
+index, a 4-byte occupancy count, 16 bytes of reservoir/RNG state, one 4-byte
+counter per AAMI class (20\,B), and per-quantized-tensor scale and zero point
+(4\,B and 1\,B each). This totals 49\,B for the post-pool buffer, which quantizes
+one tensor, and 54\,B for the raw buffer, which quantizes two (the beat and the
+RR pair). Table~\ref{tab:arm_definitions} reports the resulting totals.
+
+\subsection{Implementation reserve}
+
+A configuration that consumes 16{,}383 of 16{,}384 bytes is not deployable: it
+leaves nothing for a firmware version field, a checksum, or a future field
+addition. A deployable rule would hold back a reserve,
+\[
+B_{\mathrm{used}} \;\le\; B_{\mathrm{budget}} - B_{\mathrm{reserve}},
+\]
+which at $B_{\mathrm{reserve}} = 1024$\,B lowers the effective ceiling to
+15{,}360\,B.
+
+We are explicit about how this relates to the results, because the two are easy
+to conflate. \textbf{The primary analysis does \emph{not} apply a reserve.} Its
+configurations are generated against the full 16{,}384\,B ceiling, because that
+is what the pre-specified analysis plan fixed, and changing the byte rule after
+the fact would forfeit the pre-specification. The reserve is instead reported as
+a \emph{separate replication} (Section~\ref{sec:reserve},
+Table~\ref{tab:reserve}): the entire A0--A5 grid re-run at the 15{,}360\,B
+ceiling with regenerated replay counts, which preserves every significant gain
+over the frozen model but \emph{not} the exact arm ordering --- A1 rises to
+$0.793$ and A5 falls to $0.792$, so A4 leads under the reserve where A5 leads
+without it. Table~\ref{tab:arm_definitions} lists both count sets side
+by side so no arm's performance is ever quoted against a byte figure it was not
+measured under. A deployment should use the reserved counts; the primary table
+documents the pre-specified configuration.
+
+\subsection{Compute is not matched across arms}
+
+The arms are matched on persistent bytes but \emph{not} on compute, and the
+direction of the gap is unambiguous even though this paper does not quantify it.
+Raw replay requires re-forwarding stored beats through the encoder and
+propagating gradients through the LoRA training path, whereas post-pool replay
+enters the graph after the encoder and bypasses it entirely. Encoder adaptation
+therefore carries a substantially greater compute and energy cost per adaptation
+step than head-only or post-pool replay.
+
+\textbf{We do not report a numeric ratio.} An earlier version of this appendix
+gave analytical MAC totals and a fixed multiplier, charging backward cost as a
+multiple of the forward cost of the trainable path only. That convention is
+defensible for the head and post-pool arms, whose trainable parameters sit after
+the frozen encoder, but it is not a safe basis for a headline number in the
+encoder-LoRA arms: reverse-mode differentiation must propagate activation
+gradients \emph{through} frozen operations to reach LoRA factors inserted inside
+the encoder, so a backward pass cannot be priced from the trainable parameter
+count alone. Rather than publish a ratio whose derivation we cannot fully stand
+behind, we state the qualitative asymmetry and leave the magnitude to a
+measured study --- a layer-by-layer forward and backward derivation, or a
+profiler trace on the target runtime --- in the journal version.
+
+This matters for a deployment decision and not for the allocation result. The
+memory-allocation contribution of this paper is an accounting of persistent
+\emph{bytes}, and every comparison in it is byte-matched by construction; none
+of the conclusions depends on the compute figures withdrawn here. A reader
+choosing between these arms on a duty-cycled device should nevertheless treat
+encoder adaptation as the more expensive option and measure it before
+committing.

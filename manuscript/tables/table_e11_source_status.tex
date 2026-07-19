@@ -1,0 +1,38 @@
+\begin{table}[H]
+\centering
+\small
+\caption{E11 source-checkpoint ledger. All five variants share the architecture of
+the shipped backbone and differ only in the training objective; each is trained on
+MIT--BIH DS1 with five seeds and scored on a held-out \emph{intra-patient} DS1
+split. The right-hand column separates the checkpoints we \emph{trained} from
+those we also \emph{adapted from}, because the robustness claim covers only the
+latter. \textbf{None of the reweighted objectives beats plain cross-entropy on S
+sensitivity} ($0.881$), so we do not describe them as stronger sources; RQ5 tests
+robustness to the source objective, not adaptation from a better starting point.
+These intra-patient DS1 figures are also not comparable to unseen-patient DS2
+behaviour.}
+\label{tab:e11_source_status}
+\begin{tabular}{llrrc}
+\toprule
+Source variant & Status & \macrof{} & S sens. & Adapted from? \\
+\midrule
+Cross-entropy (\texttt{original\_ce})   & measured, 5 seeds & \textbf{0.742} & \textbf{0.881} & no \\
+Effective-number weighting              & measured, 5 seeds & 0.618 & 0.776 & \textbf{yes} \\
+Focal loss $\gamma = 1$                 & measured, 5 seeds & 0.741 & 0.878 & no \\
+Focal loss $\gamma = 2$                 & measured, 5 seeds & 0.730 & 0.843 & \textbf{yes} \\
+Focal loss $\gamma = 3$                 & measured, 5 seeds & 0.725 & 0.780 & no \\
+\midrule
+RR-conditioned token embedding          & not implemented   & ---   & ---   & --- \\
+RR token before attention               & not implemented   & ---   & ---   & --- \\
+Lightweight inter-patient CNN           & not implemented   & ---   & ---   & --- \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.4em}
+{\small The three unimplemented rows require new model graphs and were never
+trained; they are recorded here rather than omitted so the ledger matches the
+experiment plan. Three further pre-existing \texttt{beat\_classifier} checkpoints
+exist in the repository but were measured on an intra-patient random split rather
+than the DS1-only protocol, so they are not comparable and are excluded from this
+table.}
+\end{table}
