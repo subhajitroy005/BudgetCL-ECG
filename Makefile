@@ -7,11 +7,12 @@
 # Targets that need PhysioNet recordings are marked DATA. Everything else runs
 # from the released CSVs in results/ and needs no raw signal data.
 PYTHON := python
+TAG := v1.0.0-arxiv
 
 .PHONY: help install install-dev download-data verify-data verify-checkpoint \
         download-checkpoint run-primary run-ablations run-reserve run-split-first statistics \
         figures tables verify-paper paper reproduce-paper test lint \
-        arxiv-package audit clean
+        arxiv-package retag check-tag audit clean
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -79,6 +80,22 @@ lint:  ## Ruff and mypy
 
 arxiv-package:  ## Build the arXiv source archive
 	bash scripts/package_arxiv.sh
+
+retag:  ## Move v1.0.0-arxiv to HEAD and push it (tag must MOVE before --force works)
+	@test -z "$$(git status --porcelain)" || { echo "refusing: working tree is dirty"; exit 1; }
+	git tag -f -a $(TAG) -m "Initial research and reproducibility release corresponding to arXiv v1"
+	git push origin main
+	git push --force origin $(TAG)
+	@echo
+	@echo "verifying the remote resolves the tag to HEAD:"
+	@git ls-remote origin | grep -E 'refs/heads/main|refs/tags/$(TAG)\^\{\}'
+	@echo "local HEAD: $$(git rev-parse HEAD)"
+
+check-tag:  ## Fail if the tag does not point at HEAD
+	@test "$$(git rev-parse HEAD)" = "$$(git rev-list -n 1 $(TAG) 2>/dev/null)" \
+	  && echo "OK: $(TAG) points at HEAD" \
+	  || { echo "STALE: $(TAG) -> $$(git rev-list -n 1 $(TAG) 2>/dev/null), HEAD -> $$(git rev-parse HEAD)"; \
+	       echo "fix with: make retag"; exit 1; }
 
 clean:  ## Remove build and LaTeX artifacts
 	find . -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true
