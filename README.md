@@ -17,6 +17,12 @@ and replay exemplars — has to fit in **one 16 KiB budget**. This repository as
 how those bytes should be split, and provides the code, frozen configurations,
 released results, and manuscript source behind the answer.
 
+> **Name disambiguation.** BudgetCL-ECG is an independent research
+> implementation for byte-constrained patient-specific ECG adaptation. It is
+> **not** affiliated with or derived from the `drimpossible/BudgetCL` benchmark
+> (Computationally Budgeted Continual Learning); the shared "BudgetCL" prefix is
+> coincidental. This work constrains *persistent-state bytes*, not compute.
+
 **This is a software and analytical study.** No hardware runtime, peak SRAM,
 latency, or energy is measured anywhere. The 16 KiB figure is an *analytical
 persistent-state* budget, not a measured footprint. See
@@ -156,12 +162,15 @@ See [`datasets/README.md`](datasets/README.md).
 
 ## Source checkpoint
 
-Model binaries are not committed to Git. Fetch `source_model.keras` from the
-GitHub Release or Zenodo archive into `checkpoints/source/`, then:
+Model binaries are not committed to Git. Fetch and verify in one step:
 
 ```bash
-make verify-checkpoint
+python scripts/download_checkpoint.py    # downloads + verifies before installing
+python scripts/verify_checkpoint_hash.py # PASS on the published hash
 ```
+
+The download is verified *before* it is written into place, so a truncated or
+tampered file never lands on disk looking plausible.
 
 This is not optional ceremony: a reproduction that silently starts from a
 different checkpoint moves every number and reports no error.

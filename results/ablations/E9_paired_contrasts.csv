@@ -1,0 +1,5 @@
+contrast,interpretation,n_pairs,mean_difference,median_difference,ci_low,ci_high,p_wilcoxon,rank_biserial,improved,worsened
+B4_minus_B3,replay beyond plasticity,21,0.0476,-0.0001,-0.0063,0.1102,0.473334,0.186,10,11
+B4_minus_B2,plasticity beyond raw replay,21,0.0299,0.006,0.0075,0.0625,0.005111,0.74,16,4
+B1_minus_B6,replay volume,21,0.0078,-0.0023,-0.0274,0.0551,0.232226,0.368,5,15
+B4_minus_B7,encoder depth,21,0.0127,0.0027,-0.0171,0.0427,0.178956,0.403,14,6

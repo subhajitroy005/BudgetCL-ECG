@@ -9,7 +9,7 @@
 PYTHON := python
 
 .PHONY: help install install-dev download-data verify-data verify-checkpoint \
-        run-primary run-ablations run-reserve run-split-first statistics \
+        download-checkpoint run-primary run-ablations run-reserve run-split-first statistics \
         figures tables verify-paper paper reproduce-paper test lint \
         arxiv-package audit clean
 
@@ -30,6 +30,9 @@ download-data:  ## DATA: fetch MIT-BIH, INCART and SVDB from PhysioNet
 
 verify-data:  ## Check the local dataset layout against the manifests
 	$(PYTHON) scripts/verify_dataset_manifest.py
+
+download-checkpoint:  ## Fetch the source checkpoint and verify its hash
+	$(PYTHON) scripts/download_checkpoint.py
 
 verify-checkpoint:  ## Verify the source checkpoint SHA-256
 	$(PYTHON) scripts/verify_checkpoint_hash.py

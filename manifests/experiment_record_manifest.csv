@@ -1,0 +1,177 @@
+experiment_id,record_id,subject_id,included,exclusion_reason,cohort_type,seed_count,result_path,corrected_for_202,notes
+E7,100,100,true,,primary,5,results/primary/E7_patient_seed_results.csv,true,
+E7,103,103,true,,primary,5,results/primary/E7_patient_seed_results.csv,true,
+E7,105,105,true,,primary,5,results/primary/E7_patient_seed_results.csv,true,
+E7,111,111,true,,primary,5,results/primary/E7_patient_seed_results.csv,true,
+E7,113,113,true,,primary,5,results/primary/E7_patient_seed_results.csv,true,
+E7,117,117,true,,primary,5,results/primary/E7_patient_seed_results.csv,true,
+E7,121,121,true,,primary,5,results/primary/E7_patient_seed_results.csv,true,
+E7,123,123,true,,primary,5,results/primary/E7_patient_seed_results.csv,true,
+E7,200,200,true,,primary,5,results/primary/E7_patient_seed_results.csv,true,
+E7,202,201,false,Same subject as source record 201 (202.hea: same analog tape),primary,0,,true,excluded from every experiment in this release
+E7,210,210,true,,primary,5,results/primary/E7_patient_seed_results.csv,true,
+E7,212,212,true,,primary,5,results/primary/E7_patient_seed_results.csv,true,
+E7,213,213,true,,primary,5,results/primary/E7_patient_seed_results.csv,true,
+E7,214,214,true,,primary,5,results/primary/E7_patient_seed_results.csv,true,
+E7,219,219,true,,primary,5,results/primary/E7_patient_seed_results.csv,true,
+E7,221,221,true,,primary,5,results/primary/E7_patient_seed_results.csv,true,
+E7,222,222,true,,primary,5,results/primary/E7_patient_seed_results.csv,true,
+E7,228,228,true,,primary,5,results/primary/E7_patient_seed_results.csv,true,
+E7,231,231,true,,primary,5,results/primary/E7_patient_seed_results.csv,true,
+E7,232,232,true,,primary,5,results/primary/E7_patient_seed_results.csv,true,
+E7,233,233,true,,primary,5,results/primary/E7_patient_seed_results.csv,true,
+E7,234,234,true,,primary,5,results/primary/E7_patient_seed_results.csv,true,
+E7,101,101,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E7,106,106,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E7,108,108,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E7,109,109,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E7,112,112,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E7,114,114,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E7,115,115,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E7,116,116,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E7,118,118,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E7,119,119,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E7,122,122,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E7,124,124,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E7,201,201,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E7,203,203,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E7,205,205,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E7,207,207,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E7,208,208,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E7,209,209,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E7,215,215,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E7,220,220,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E7,223,223,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E7,230,230,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,100,100,true,,reserve replication,5,results/reserve/E16_patient_seed_results.csv,true,
+E16,103,103,true,,reserve replication,5,results/reserve/E16_patient_seed_results.csv,true,
+E16,105,105,true,,reserve replication,5,results/reserve/E16_patient_seed_results.csv,true,
+E16,111,111,true,,reserve replication,5,results/reserve/E16_patient_seed_results.csv,true,
+E16,113,113,true,,reserve replication,5,results/reserve/E16_patient_seed_results.csv,true,
+E16,117,117,true,,reserve replication,5,results/reserve/E16_patient_seed_results.csv,true,
+E16,121,121,true,,reserve replication,5,results/reserve/E16_patient_seed_results.csv,true,
+E16,123,123,true,,reserve replication,5,results/reserve/E16_patient_seed_results.csv,true,
+E16,200,200,true,,reserve replication,5,results/reserve/E16_patient_seed_results.csv,true,
+E16,202,201,false,Same subject as source record 201 (202.hea: same analog tape),reserve replication,0,,true,excluded from every experiment in this release
+E16,210,210,true,,reserve replication,5,results/reserve/E16_patient_seed_results.csv,true,
+E16,212,212,true,,reserve replication,5,results/reserve/E16_patient_seed_results.csv,true,
+E16,213,213,true,,reserve replication,5,results/reserve/E16_patient_seed_results.csv,true,
+E16,214,214,true,,reserve replication,5,results/reserve/E16_patient_seed_results.csv,true,
+E16,219,219,true,,reserve replication,5,results/reserve/E16_patient_seed_results.csv,true,
+E16,221,221,true,,reserve replication,5,results/reserve/E16_patient_seed_results.csv,true,
+E16,222,222,true,,reserve replication,5,results/reserve/E16_patient_seed_results.csv,true,
+E16,228,228,true,,reserve replication,5,results/reserve/E16_patient_seed_results.csv,true,
+E16,231,231,true,,reserve replication,5,results/reserve/E16_patient_seed_results.csv,true,
+E16,232,232,true,,reserve replication,5,results/reserve/E16_patient_seed_results.csv,true,
+E16,233,233,true,,reserve replication,5,results/reserve/E16_patient_seed_results.csv,true,
+E16,234,234,true,,reserve replication,5,results/reserve/E16_patient_seed_results.csv,true,
+E16,101,101,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,106,106,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,108,108,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,109,109,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,112,112,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,114,114,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,115,115,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,116,116,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,118,118,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,119,119,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,122,122,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,124,124,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,201,201,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,203,203,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,205,205,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,207,207,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,208,208,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,209,209,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,215,215,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,220,220,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,223,223,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E16,230,230,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,100,100,true,,regularization baseline,5,results/regularization/E15_patient_seed_results.csv,true,
+E15,103,103,true,,regularization baseline,5,results/regularization/E15_patient_seed_results.csv,true,
+E15,105,105,true,,regularization baseline,5,results/regularization/E15_patient_seed_results.csv,true,
+E15,111,111,true,,regularization baseline,5,results/regularization/E15_patient_seed_results.csv,true,
+E15,113,113,true,,regularization baseline,5,results/regularization/E15_patient_seed_results.csv,true,
+E15,117,117,true,,regularization baseline,5,results/regularization/E15_patient_seed_results.csv,true,
+E15,121,121,true,,regularization baseline,5,results/regularization/E15_patient_seed_results.csv,true,
+E15,123,123,true,,regularization baseline,5,results/regularization/E15_patient_seed_results.csv,true,
+E15,200,200,true,,regularization baseline,5,results/regularization/E15_patient_seed_results.csv,true,
+E15,202,201,false,Same subject as source record 201 (202.hea: same analog tape),regularization baseline,0,,true,excluded from every experiment in this release
+E15,210,210,true,,regularization baseline,5,results/regularization/E15_patient_seed_results.csv,true,
+E15,212,212,true,,regularization baseline,5,results/regularization/E15_patient_seed_results.csv,true,
+E15,213,213,true,,regularization baseline,5,results/regularization/E15_patient_seed_results.csv,true,
+E15,214,214,true,,regularization baseline,5,results/regularization/E15_patient_seed_results.csv,true,
+E15,219,219,true,,regularization baseline,5,results/regularization/E15_patient_seed_results.csv,true,
+E15,221,221,true,,regularization baseline,5,results/regularization/E15_patient_seed_results.csv,true,
+E15,222,222,true,,regularization baseline,5,results/regularization/E15_patient_seed_results.csv,true,
+E15,228,228,true,,regularization baseline,5,results/regularization/E15_patient_seed_results.csv,true,
+E15,231,231,true,,regularization baseline,5,results/regularization/E15_patient_seed_results.csv,true,
+E15,232,232,true,,regularization baseline,5,results/regularization/E15_patient_seed_results.csv,true,
+E15,233,233,true,,regularization baseline,5,results/regularization/E15_patient_seed_results.csv,true,
+E15,234,234,true,,regularization baseline,5,results/regularization/E15_patient_seed_results.csv,true,
+E15,101,101,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,106,106,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,108,108,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,109,109,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,112,112,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,114,114,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,115,115,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,116,116,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,118,118,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,119,119,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,122,122,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,124,124,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,201,201,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,203,203,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,205,205,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,207,207,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,208,208,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,209,209,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,215,215,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,220,220,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,223,223,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E15,230,230,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,100,100,true,,split-first sensitivity,5,results/preprocessing_sensitivity/E17_patient_seed_results.csv,true,
+E17,103,103,true,,split-first sensitivity,5,results/preprocessing_sensitivity/E17_patient_seed_results.csv,true,
+E17,105,105,true,,split-first sensitivity,5,results/preprocessing_sensitivity/E17_patient_seed_results.csv,true,
+E17,111,111,true,,split-first sensitivity,5,results/preprocessing_sensitivity/E17_patient_seed_results.csv,true,
+E17,113,113,true,,split-first sensitivity,5,results/preprocessing_sensitivity/E17_patient_seed_results.csv,true,
+E17,117,117,true,,split-first sensitivity,5,results/preprocessing_sensitivity/E17_patient_seed_results.csv,true,
+E17,121,121,true,,split-first sensitivity,5,results/preprocessing_sensitivity/E17_patient_seed_results.csv,true,
+E17,123,123,true,,split-first sensitivity,5,results/preprocessing_sensitivity/E17_patient_seed_results.csv,true,
+E17,200,200,true,,split-first sensitivity,5,results/preprocessing_sensitivity/E17_patient_seed_results.csv,true,
+E17,202,201,false,Same subject as source record 201 (202.hea: same analog tape),split-first sensitivity,0,,true,excluded from every experiment in this release
+E17,210,210,true,,split-first sensitivity,5,results/preprocessing_sensitivity/E17_patient_seed_results.csv,true,
+E17,212,212,true,,split-first sensitivity,5,results/preprocessing_sensitivity/E17_patient_seed_results.csv,true,
+E17,213,213,true,,split-first sensitivity,5,results/preprocessing_sensitivity/E17_patient_seed_results.csv,true,
+E17,214,214,true,,split-first sensitivity,5,results/preprocessing_sensitivity/E17_patient_seed_results.csv,true,
+E17,219,219,true,,split-first sensitivity,5,results/preprocessing_sensitivity/E17_patient_seed_results.csv,true,
+E17,221,221,true,,split-first sensitivity,5,results/preprocessing_sensitivity/E17_patient_seed_results.csv,true,
+E17,222,222,true,,split-first sensitivity,5,results/preprocessing_sensitivity/E17_patient_seed_results.csv,true,
+E17,228,228,true,,split-first sensitivity,5,results/preprocessing_sensitivity/E17_patient_seed_results.csv,true,
+E17,231,231,true,,split-first sensitivity,5,results/preprocessing_sensitivity/E17_patient_seed_results.csv,true,
+E17,232,232,true,,split-first sensitivity,5,results/preprocessing_sensitivity/E17_patient_seed_results.csv,true,
+E17,233,233,true,,split-first sensitivity,5,results/preprocessing_sensitivity/E17_patient_seed_results.csv,true,
+E17,234,234,true,,split-first sensitivity,5,results/preprocessing_sensitivity/E17_patient_seed_results.csv,true,
+E17,101,101,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,106,106,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,108,108,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,109,109,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,112,112,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,114,114,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,115,115,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,116,116,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,118,118,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,119,119,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,122,122,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,124,124,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,201,201,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,203,203,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,205,205,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,207,207,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,208,208,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,209,209,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,215,215,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,220,220,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,223,223,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"
+E17,230,230,true,,source (DS1),5,,true,"source pool: replay sampling, RR statistics, source-domain probe"

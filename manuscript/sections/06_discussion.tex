@@ -25,10 +25,13 @@ consistent: post-pool arms plateau near $0.39$ F1 while encoder arms reach
 $0.58$--$0.60$. This remains a mechanistic \emph{hypothesis}. RQ5 is the test that
 speaks to it most directly, and it is weakly consistent with the hypothesis
 rather than confirmatory: starting from sources whose S sensitivity is already
-$0.78$--$0.88$, encoder adaptation still matches head-only replay
-($\Delta_{\mathrm{A4-A1}} = +0.0001$ and $+0.0024$), so the encoder gain is not
-merely an artifact of one weak source objective --- but those margins are small
-and carry no reported uncertainty, so they do not establish an ordering.
+$0.78$--$0.88$ \emph{on their own DS1 test split}, encoder adaptation still
+matches head-only replay ($\Delta_{\mathrm{A4-A1}} = +0.0001$ and $+0.0024$).
+The adaptation gain persists under two alternative class-reweighted
+source-training objectives. This supports robustness to the choice of source
+objective, but does not establish robustness to a demonstrably stronger
+unseen-patient source model. Those margins are also small and carry no
+reported uncertainty, so they do not establish an ordering.
 
 \subsection{What the data support}
 

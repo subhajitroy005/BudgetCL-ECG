@@ -29,12 +29,16 @@ from released artifacts by a single driver
 \noindent
 \begin{tabular}{@{}ll@{}}
 Repository & \url{https://github.com/subhajitroy005/BudgetCL-ECG} \\
-Software release & \texttt{v1.0.0-arxiv} \\
-Git commit & \texttt{6625136f2191f81de0b274ca9b2976d0dc79a249} \\
-Archived snapshot & Zenodo DOI to be assigned on archival \\
+Software release & \texttt{v1.0.0-arxiv} (annotated, immutable tag) \\
 \end{tabular}
 
 \vspace{0.3em}
+\noindent
+The release tag is the primary identifier: a manuscript cannot contain its own
+Git commit hash, because inserting the hash changes the commit. The exact commit
+for this release is recorded in \texttt{releases/release\_manifest.json} inside
+the tagged tree, so \texttt{v1.0.0-arxiv} resolves to it unambiguously.
+
 \noindent
 The DS1 source checkpoint these results adapt from is pinned by
 

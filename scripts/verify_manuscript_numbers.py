@@ -115,6 +115,39 @@ def verify_paired_tests(tex: dict[str, str]) -> None:
           f"only frozen-model comparisons survive Holm (found {sorted(survivors)})")
 
 
+def verify_prose_matches_tables(tex: dict[str, str]) -> None:
+    """Every CI quoted in PROSE must match the released CSV.
+
+    The verifier previously checked only the generated tables, so a stale
+    interval sitting in the running text could survive indefinitely -- and one
+    did: the prose quoted [0.052,0.239] while the table and CSV said
+    [0.055,0.239]. Both came from valid bootstrap runs with different RNG
+    seeds, which is exactly why a machine check is needed rather than a reading.
+
+    Bootstrap endpoints move in the third decimal across seeds, so the CSV
+    (fixed seed 20260719) is the single source of truth.
+    """
+    rows = read_csv("results/primary/E8_paired_tests.csv")
+    if not rows:
+        WARN.append("E8_paired_tests.csv missing; skipping prose CI checks")
+        return
+    prose = "\n".join(
+        text for name, text in tex.items() if name.startswith(("05_", "06_", "08_"))
+    )
+    for row in rows:
+        if row["comparison"] not in ("A4_vs_A0", "A5_vs_A0"):
+            continue  # only these two are quoted numerically in the prose
+        lo, hi = float(row["ci_low"]), float(row["ci_high"])
+        # Compare with whitespace stripped so LaTeX line wrapping cannot hide a
+        # mismatch, and accept both the bare and sign-prefixed renderings.
+        flat = "".join(prose.split())
+        wanted = [f"[{lo:.3f},{hi:.3f}]", f"[+{lo:.3f},+{hi:.3f}]"]
+        check(
+            any(w in flat for w in wanted),
+            f"prose quotes {row['comparison']} CI [{lo:.3f},{hi:.3f}] matching the CSV",
+        )
+
+
 def verify_byte_totals(tex: dict[str, str]) -> None:
     """Replay counts and byte totals must match the solver, not a transcript."""
     table = tex.get("table_arm_budget.tex", "")
@@ -172,6 +205,7 @@ def main() -> int:
     verify_cohort(tex)
     verify_arm_means(tex)
     verify_paired_tests(tex)
+    verify_prose_matches_tables(tex)
     verify_byte_totals(tex)
     verify_splitfirst(tex)
     verify_forbidden(tex)

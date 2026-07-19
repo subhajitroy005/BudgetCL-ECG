@@ -1,0 +1,5 @@
+# SHA-256 for every released checkpoint.
+# Verify with:  sha256sum -c checkpoints/checksums.sha256   (run from the repo root)
+# Model binaries are not committed to Git; fetch them first:
+#   python scripts/download_checkpoint.py
+a6d4eff14caa4404eb57dc5eb9ecfcb9e9d3f1a1bf907d6d147fb5611eb79fce  checkpoints/source/source_model.keras

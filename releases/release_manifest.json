@@ -14,12 +14,12 @@
   "verification": {
     "tests_passed": 86,
     "leakage_audit": "PASS 11 / FIXED 1 / ASSESSED 1 / WARN 1 / FAIL 0 (manuscript table)",
-    "manuscript_numbers": "PASS 51 / WARN 0 / FAIL 0",
+    "manuscript_numbers": "PASS 53 / WARN 0 / FAIL 0",
     "manuscript_pages": 51,
     "type3_fonts": 0,
     "references": 40
   },
-  "artifact_count": 50,
+  "artifact_count": 53,
   "arxiv_id": "PENDING",
   "zenodo_doi": "PENDING",
   "license": "MIT (software only; PhysioNet data under its own terms)",
@@ -28,5 +28,6 @@
     "sha256": "fd528ed26f86b65417770cd3cb342a5896edfb7fef1ebbdd354918644779e1eb",
     "clean_room_compile": "PASS (51 pages, 0 errors, 0 undefined, 0 Type 3)"
   },
-  "repository": "https://github.com/subhajitroy005/BudgetCL-ECG"
+  "repository": "https://github.com/subhajitroy005/BudgetCL-ECG",
+  "note_on_commit": "The manuscript cites the immutable tag rather than a commit hash, since a document cannot contain its own commit. This field records the exact commit for the release."
 }

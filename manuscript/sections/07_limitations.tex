@@ -17,22 +17,28 @@ model surviving correction. Published results on this split that do not exclude
 same mechanism, and we recommend the check
 be run as standard.
 
-\textbf{Class-reweighted source checkpoints (RQ5) --- partially addressed.}
+\begin{sloppypar}
+\textbf{Robustness to source-training objective (RQ5) --- partially addressed.}
 Five architecture-identical DS1 source variants (cross-entropy, effective-number
 weighting, focal $\gamma\in\{1,2,3\}$) are trained with five seeds and reach
 S sensitivity $0.78$--$0.88$ on their own DS1 test split, a figure that motivated
-the concern. Adaptation from these sources still produces the gain
-(Table~\ref{tab:strong_adapt}), so the \emph{gain} is not an artifact of source
-weakness. Three gaps remain. Adaptation was re-run from two of the five trained
-variants, so the robustness claim covers two sources rather than five; the three
-RR-placement / CNN variants (RR-conditioned token embedding, RR token before
-attention, lightweight inter-patient CNN) require new model graphs and were
-never trained; and the encoder-minus-head margins from the reweighted
+the concern. The adaptation gain persists under two alternative
+class-reweighted source-training objectives (Table~\ref{tab:strong_adapt}).
+This supports robustness to the choice of source \emph{objective}, but does
+\textbf{not} establish robustness to a demonstrably stronger unseen-patient
+source model. Three gaps remain.
+Adaptation was re-run from two of the five trained
+variants, so the robustness claim covers two sources rather than five. The three
+RR-placement and CNN variants (RR-conditioned token embedding, RR token before
+attention, and a lightweight inter-patient CNN) require new model graphs and
+were never trained. The encoder-minus-head margins from the reweighted
 checkpoints, while nonnegative, are small and carry no reported uncertainty, so
-RQ5 does not independently support an encoder-over-head ordering. These
+RQ5 does not independently support an encoder-over-head ordering.
+ These
 checkpoints are also not \emph{stronger} sources --- on intra-patient DS1 S
 sensitivity they are below the cross-entropy baseline --- so RQ5 tests
 robustness to the source objective, not adaptation from a stronger start.
+\end{sloppypar}
 
 \textbf{Cross-database transfer (RQ6) --- closed at subject level, with a
 cohort caveat.} INCART recordings were grouped by the subject identifier in the
