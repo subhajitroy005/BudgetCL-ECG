@@ -62,14 +62,25 @@ def main() -> int:
             if shutil.which(candidate):
                 engine = candidate
                 break
+        # If an engine IS present the compile is mandatory: a LaTeX error must
+        # never be reported as PASS. Only the absence of any engine is tolerated.
         if engine == "latexmk":
-            stages.append(("5/6  paper: compile manuscript",
-                           ["latexmk", "-pdf", "main.tex"], REPO / "manuscript", True))
+            stages.append((
+                "5/6  paper: compile manuscript",
+                ["latexmk", "-pdf", "-interaction=nonstopmode", "-halt-on-error", "main.tex"],
+                REPO / "manuscript", False,
+            ))
         elif engine == "tectonic":
-            stages.append(("5/6  paper: compile manuscript",
-                           ["tectonic", "-X", "compile", "main.tex"], REPO / "manuscript", True))
+            stages.append((
+                "5/6  paper: compile manuscript",
+                ["tectonic", "-X", "compile", "main.tex"], REPO / "manuscript", False,
+            ))
         else:
-            print("note: no latexmk or tectonic found; skipping the paper build")
+            print(
+                "note: neither latexmk nor tectonic is installed; skipping the "
+                "paper build. Every NUMBER is still verified below -- only the "
+                "PDF is not rebuilt."
+            )
 
     stages.append(("6/6  verify: manuscript numbers vs released artifacts",
                    [py, "scripts/verify_manuscript_numbers.py"], None, False))

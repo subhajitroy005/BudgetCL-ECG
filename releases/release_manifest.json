@@ -2,7 +2,7 @@
   "release_tag": "v1.0.0-arxiv",
   "software_version": "1.0.0",
   "paper_version": "arXiv v1",
-  "git_commit": "16ac34312ef5ce207b774264dd3ebd125d33c761",
+  "git_commit": "6625136f2191f81de0b274ca9b2976d0dc79a249",
   "checkpoint_sha256": "a6d4eff14caa4404eb57dc5eb9ecfcb9e9d3f1a1bf907d6d147fb5611eb79fce",
   "checkpoint_parameters": 6643,
   "primary_cohort_records": 21,
@@ -27,5 +27,6 @@
     "file": "releases/Replay-Plasticity-ECG-arxiv-v1.zip",
     "sha256": "fd528ed26f86b65417770cd3cb342a5896edfb7fef1ebbdd354918644779e1eb",
     "clean_room_compile": "PASS (51 pages, 0 errors, 0 undefined, 0 Type 3)"
-  }
+  },
+  "repository": "https://github.com/subhajitroy005/BudgetCL-ECG"
 }

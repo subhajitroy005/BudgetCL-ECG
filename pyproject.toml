@@ -30,7 +30,7 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/SS-Electronics/BudgetCL-ECG"
+Repository = "https://github.com/subhajitroy005/BudgetCL-ECG"
 
 [tool.setuptools.packages.find]
 # `statistics` is deliberately NOT installed. The directory exists at the repo

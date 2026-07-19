@@ -15,19 +15,39 @@ Database, the St.\ Petersburg INCART 12-lead Arrhythmia Database, and the
 MIT--BIH Supraventricular Arrhythmia Database, all obtainable from PhysioNet.
 The DS1/DS2 record partitions, the external inclusion and exclusion manifests,
 the INCART record-to-subject map, and every derived summary CSV behind the
-tables and figures \textbf{will be released with arXiv v1.0} alongside the code.
+tables and figures are released with the code at the repository below.
 
 \paragraph{Code availability.} The adaptation framework, the constrained
 configuration generator, the memory-accounting module, the statistical
-pipeline, and the figure and table generators \textbf{will be released with
-arXiv v1.0} (release tag \texttt{v1.0.0-arxiv}) together with the run
-configurations, the random seeds, and the environment specification needed to
-reproduce every number in this paper. The DS1 source checkpoint these results
-adapt from is pinned by
-\mbox{SHA-256 \texttt{a6d4eff1\allowbreak 4caa4404\allowbreak eb57dc5e\allowbreak b9ecfcb9\allowbreak e9d3f1a1\allowbreak bf907d6d\allowbreak 147fb561\allowbreak 1eb79fce}},
-so a reproduction can verify it is starting from the same model. No repository
-URL is quoted here because the archive is published with the preprint rather
-than before it.
+pipeline, and the figure and table generators are released together with the
+run configurations, the random seeds, and the environment specification needed
+to reproduce every number in this paper. Every published value is regenerated
+from released artifacts by a single driver
+(\texttt{scripts/reproduce\_paper.py}); no result is transcribed by hand.
+
+\vspace{0.3em}
+\noindent
+\begin{tabular}{@{}ll@{}}
+Repository & \url{https://github.com/subhajitroy005/BudgetCL-ECG} \\
+Software release & \texttt{v1.0.0-arxiv} \\
+Git commit & \texttt{6625136f2191f81de0b274ca9b2976d0dc79a249} \\
+Archived snapshot & Zenodo DOI to be assigned on archival \\
+\end{tabular}
+
+\vspace{0.3em}
+\noindent
+The DS1 source checkpoint these results adapt from is pinned by
+
+\vspace{0.2em}
+\noindent\hspace*{\fill}%
+\texttt{SHA-256 a6d4eff14caa4404eb57dc5e\-b9ecfcb9e9d3f1a1bf907d6d147fb5611eb79fce}%
+\hspace*{\fill}
+\vspace{0.2em}
+
+\noindent
+so a reproduction can verify it is starting from the same model. Raw PhysioNet
+recordings are not redistributed; the repository provides download scripts and
+itemized inclusion/exclusion manifests instead.
 
 \paragraph{Funding.} This work received no external funding.
 

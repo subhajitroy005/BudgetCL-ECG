@@ -124,7 +124,7 @@ disagree.
 ## Installation
 
 ```bash
-git clone https://github.com/SS-Electronics/BudgetCL-ECG.git
+git clone https://github.com/subhajitroy005/BudgetCL-ECG.git
 cd BudgetCL-ECG
 make install          # pip install -r requirements.txt && pip install -e .
 ```
@@ -316,7 +316,7 @@ checks, not of correctness.
   title   = {BudgetCL-ECG: Replay--Plasticity Co-Design at 16 KiB},
   year    = {2026},
   version = {1.0.0},
-  url     = {https://github.com/SS-Electronics/BudgetCL-ECG}
+  url     = {https://github.com/subhajitroy005/BudgetCL-ECG}
 }
 ```
 
