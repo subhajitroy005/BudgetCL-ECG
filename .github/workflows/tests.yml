@@ -39,6 +39,11 @@ jobs:
       - name: Verify manuscript numbers
         run: python scripts/verify_manuscript_numbers.py
 
+      - name: Verify the release records match a fresh run
+        # Catches the failure mode where release_manifest.json, the release
+        # notes, and the README badges drift apart from each other.
+        run: python scripts/generate_release_report.py --check
+
       - name: Fail if generated output drifted from the committed release
         run: |
           if ! git diff --quiet -- results manuscript/tables figures/paper; then

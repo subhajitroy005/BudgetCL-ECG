@@ -4,8 +4,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/tests-86%20passing-brightgreen.svg)](tests/)
-[![Release](https://img.shields.io/badge/release-v1.0.0--arxiv-blue.svg)](releases/v1.0.0-arxiv.md)
+[![Tests](https://github.com/subhajitroy005/BudgetCL-ECG/actions/workflows/tests.yml/badge.svg)](https://github.com/subhajitroy005/BudgetCL-ECG/actions/workflows/tests.yml)
+[![Release](https://img.shields.io/github/v/release/subhajitroy005/BudgetCL-ECG?include_prereleases)](https://github.com/subhajitroy005/BudgetCL-ECG/releases/tag/v1.0.0-arxiv)
 
 ---
 

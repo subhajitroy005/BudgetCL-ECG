@@ -42,16 +42,62 @@ for t in "$STAGE"/tables/*.tex; do
     || { echo "  dropping unused $(basename "$t")"; rm "$t"; }
 done
 
-# Refuse to ship build artifacts or private paths.
-if find "$STAGE" \( -name '*.aux' -o -name '*.log' -o -name '*.out' \
-     -o -name '*.toc' -o -name '*.synctex.gz' \) | grep -q .; then
-  echo "aborting: build artifacts staged"; exit 1
-fi
-if grep -rIl '/home/' "$STAGE" | grep -q .; then
-  echo "WARNING: absolute private paths in staged source:"; grep -rIl '/home/' "$STAGE"
+# Private absolute paths are a release blocker, not a warning.
+if grep -rIlE '/home/|C:\\Users\\' "$STAGE" | grep -q .; then
+  echo "aborting: private absolute paths found in staged source"
+  grep -rIlE '/home/|C:\\Users\\' "$STAGE"
+  exit 1
 fi
 
+# ---------------------------------------------------------------------------
+# Clean-room compile of the EXACT staged tree.
+#
+# The release manifest claims "clean-room compile: PASS". That claim is only
+# meaningful if the archive itself is compiled before it is sealed -- compiling
+# the working manuscript/ directory proves nothing about what ships.
+# ---------------------------------------------------------------------------
+ENGINE=""
+if command -v latexmk >/dev/null 2>&1; then ENGINE=latexmk
+elif command -v tectonic >/dev/null 2>&1; then ENGINE=tectonic
+else
+  echo "aborting: neither latexmk nor tectonic is installed; cannot verify the archive"
+  exit 1
+fi
+
+(
+  cd "$STAGE"
+  if [ "$ENGINE" = latexmk ]; then
+    latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
+  else
+    tectonic -X compile main.tex
+  fi
+
+  # latexmk writes main.log; tectonic does not, so only inspect it when present.
+  if [ -f main.log ] && grep -Eiq 'undefined references|citation.*undefined|file.*not found' main.log; then
+    echo "aborting: unresolved LaTeX references or missing files"
+    grep -Ei 'undefined references|citation.*undefined|file.*not found' main.log
+    exit 1
+  fi
+  [ -f main.pdf ] || { echo "aborting: clean-room compile produced no PDF"; exit 1; }
+  pdfinfo main.pdf > clean_room_pdfinfo.txt 2>/dev/null || true
+  echo "clean-room compile OK ($ENGINE): $(pdfinfo main.pdf 2>/dev/null | grep -oP 'Pages:\s+\K\d+') pages"
+) || exit 1
+
+# Strip every build product so the archive ships SOURCE only.
+find "$STAGE" -type f \( \
+    -name '*.aux' -o -name '*.log' -o -name '*.out' -o -name '*.toc' \
+    -o -name '*.fls' -o -name '*.fdb_latexmk' -o -name '*.synctex.gz' \
+    -o -name '*.bbl' -o -name '*.blg' -o -name 'main.pdf' \
+    -o -name 'clean_room_pdfinfo.txt' \
+\) -delete
+
 rm -f "$OUT" "$OUT_TAR"
+# Final assertion: no build product survived the clean-up.
+if find "$STAGE" \( -name '*.aux' -o -name '*.log' -o -name '*.out' \
+     -o -name '*.toc' -o -name '*.synctex.gz' -o -name 'main.pdf' \) | grep -q .; then
+  echo "aborting: build artifacts still staged after clean-up"; exit 1
+fi
+
 tar -czf "$OUT_TAR" -C "$STAGE" .
 ( cd "$STAGE" && zip -qr "$OLDPWD/$OUT" . -x '.*' )
 rm -rf "$STAGE"

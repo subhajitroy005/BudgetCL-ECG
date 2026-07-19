@@ -34,9 +34,16 @@ def apply_style() -> None:
 
 
 def save_figure(fig, name: str, out_dir: Path | None = None) -> Path:
-    """Save a figure as PDF into ``figures/paper/`` and return its path."""
+    """Save a figure as a BYTE-REPRODUCIBLE PDF into ``figures/paper/``.
+
+    Matplotlib stamps ``/CreationDate`` into every PDF, so regenerating an
+    unchanged figure still produces a different file. That makes a
+    ``git diff --exit-code`` drift check useless -- it would fail on every run
+    regardless of whether anything actually changed. Suppressing the date makes
+    the output deterministic, so a diff means a real content change.
+    """
     out_dir = out_dir or PAPER_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / (name if name.endswith(".pdf") else f"{name}.pdf")
-    fig.savefig(path)
+    fig.savefig(path, metadata={"CreationDate": None})
     return path

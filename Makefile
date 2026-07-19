@@ -6,13 +6,16 @@
 #
 # Targets that need PhysioNet recordings are marked DATA. Everything else runs
 # from the released CSVs in results/ and needs no raw signal data.
-PYTHON := python
+# Prefer an active virtualenv's python, then `python`, then `python3`.
+# Debian-family systems ship python3 without a `python` alias, so hardcoding
+# `python` makes every target fail with exit 127 on a stock install.
+PYTHON ?= $(shell command -v python 2>/dev/null || command -v python3)
 TAG := v1.0.0-arxiv
 
 .PHONY: help install install-dev download-data verify-data verify-checkpoint \
         download-checkpoint run-primary run-ablations run-reserve run-split-first statistics \
         figures tables verify-paper paper reproduce-paper test lint \
-        arxiv-package retag check-tag audit clean
+        arxiv-package release-report check-release-report release-tag check-tag audit clean
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -81,21 +84,32 @@ lint:  ## Ruff and mypy
 arxiv-package:  ## Build the arXiv source archive
 	bash scripts/package_arxiv.sh
 
-retag:  ## Move v1.0.0-arxiv to HEAD and push it (tag must MOVE before --force works)
-	@test -z "$$(git status --porcelain)" || { echo "refusing: working tree is dirty"; exit 1; }
-	git tag -f -a $(TAG) -m "Initial research and reproducibility release corresponding to arXiv v1"
+release-report:  ## Regenerate release_manifest.json, release notes, README badges
+	$(PYTHON) scripts/generate_release_report.py
+
+check-release-report:  ## Fail if the committed release records drift from a fresh run
+	$(PYTHON) scripts/generate_release_report.py --check
+
+release-tag:  ## Create the release tag (REFUSES if it already exists)
+	@test -z "$$(git status --porcelain)" || { \
+	    echo "refusing: working tree is dirty"; exit 1; \
+	}
+	@if git rev-parse "$(TAG)" >/dev/null 2>&1; then \
+	    echo "refusing: tag $(TAG) already exists"; \
+	    echo "A published release tag is immutable. Create a new version"; \
+	    echo "instead of moving it: v1.0.1-arxiv, v1.1.0, v2.0.0-journal."; \
+	    exit 1; \
+	fi
+	git tag -a "$(TAG)" \
+	    -m "Initial research and reproducibility release corresponding to arXiv v1"
 	git push origin main
-	git push --force origin $(TAG)
-	@echo
-	@echo "verifying the remote resolves the tag to HEAD:"
-	@git ls-remote origin | grep -E 'refs/heads/main|refs/tags/$(TAG)\^\{\}'
-	@echo "local HEAD: $$(git rev-parse HEAD)"
+	git push origin "$(TAG)"
 
 check-tag:  ## Fail if the tag does not point at HEAD
 	@test "$$(git rev-parse HEAD)" = "$$(git rev-list -n 1 $(TAG) 2>/dev/null)" \
 	  && echo "OK: $(TAG) points at HEAD" \
 	  || { echo "STALE: $(TAG) -> $$(git rev-list -n 1 $(TAG) 2>/dev/null), HEAD -> $$(git rev-parse HEAD)"; \
-	       echo "fix with: make retag"; exit 1; }
+	       echo "A published tag is immutable: cut a new version rather than moving it."; exit 1; }
 
 clean:  ## Remove build and LaTeX artifacts
 	find . -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true

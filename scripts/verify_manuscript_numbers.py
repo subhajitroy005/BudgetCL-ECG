@@ -10,6 +10,11 @@ external results months after the subject-level analysis existed. A number that
 is merely "probably still right" is not verified.
 
 Exit code is non-zero on any FAIL.
+
+Policy: a missing required artifact and a reappearing retired claim are both
+FAIL, not WARN. WARN is reserved for genuinely non-blocking conditions, so that
+CI cannot go green while a publication artifact is absent or an unsupported
+claim has crept back into the manuscript.
 """
 
 from __future__ import annotations
@@ -89,7 +94,7 @@ def verify_arm_means(tex: dict[str, str]) -> None:
     """Arm means in the generated table must equal the released CSV."""
     rows = read_csv("results/primary/E7_arm_summary.csv")
     if not rows:
-        WARN.append("E7_arm_summary.csv missing; skipping arm-mean checks")
+        FAIL.append("required artifact missing: results/primary/E7_arm_summary.csv")
         return
     table = tex.get("table_primary_arms.tex", "")
     for row in rows:
@@ -101,7 +106,7 @@ def verify_paired_tests(tex: dict[str, str]) -> None:
     """Every p-value in the comparison table must come from the CSV."""
     rows = read_csv("results/primary/E8_paired_tests.csv")
     if not rows:
-        WARN.append("E8_paired_tests.csv missing; skipping paired-test checks")
+        FAIL.append("required artifact missing: results/primary/E8_paired_tests.csv")
         return
     table = tex.get("table_pairwise_tests.tex", "")
     survivors = set()
@@ -129,7 +134,9 @@ def verify_prose_matches_tables(tex: dict[str, str]) -> None:
     """
     rows = read_csv("results/primary/E8_paired_tests.csv")
     if not rows:
-        WARN.append("E8_paired_tests.csv missing; skipping prose CI checks")
+        FAIL.append(
+            "required artifact missing: results/primary/E8_paired_tests.csv (prose CI check)"
+        )
         return
     prose = "\n".join(
         text for name, text in tex.items() if name.startswith(("05_", "06_", "08_"))
@@ -159,7 +166,7 @@ def verify_tost_count(tex: dict[str, str]) -> None:
     """
     rows = read_csv("results/budget_sweep/E10_tost.csv")
     if not rows:
-        WARN.append("E10_tost.csv missing; skipping TOST count check")
+        FAIL.append("required artifact missing: results/budget_sweep/E10_tost.csv")
         return
     n_equiv = sum(1 for r in rows if r["equivalent_at_margin"].strip().lower() == "true")
     body = "\n".join(tex.values())
@@ -196,7 +203,10 @@ def verify_splitfirst(tex: dict[str, str]) -> None:
     """E17 arm means in the paper must match the released sensitivity CSV."""
     rows = read_csv("results/preprocessing_sensitivity/E17_arm_summary.csv")
     if not rows:
-        WARN.append("E17_arm_summary.csv missing; skipping sensitivity checks")
+        FAIL.append(
+            "required artifact missing: "
+            "results/preprocessing_sensitivity/E17_arm_summary.csv"
+        )
         return
     table = tex.get("table_splitfirst.tex", "")
     for row in rows:
@@ -209,7 +219,10 @@ def verify_forbidden(tex: dict[str, str]) -> None:
     for phrase, reason in FORBIDDEN.items():
         hits = [name for name, text in tex.items() if phrase in text.lower()]
         if hits:
-            WARN.append(f"forbidden phrase '{phrase}' in {hits} -- {reason}")
+            # A retired claim reappearing is a release blocker, not a note: the
+            # whole point of the list is that these statements were removed
+            # because the evidence does not support them.
+            FAIL.append(f"forbidden phrase '{phrase}' found in {hits}: {reason}")
         else:
             PASS.append(f"forbidden phrase '{phrase}' absent ({reason})")
 
@@ -220,7 +233,7 @@ def verify_generated_tables_are_marked() -> None:
                  "table_arm_budget.tex", "table_splitfirst.tex"):
         path = REPO / "manuscript" / "tables" / name
         if not path.exists():
-            WARN.append(f"{name} not generated yet")
+            FAIL.append(f"required generated table missing: manuscript/tables/{name}")
             continue
         check("GENERATED FILE" in path.read_text(), f"{name} is marked as generated")
 
