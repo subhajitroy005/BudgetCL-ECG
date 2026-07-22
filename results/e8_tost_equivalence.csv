@@ -1,0 +1,7 @@
+comparison,delta,median_difference,ci90_bca_low,ci90_bca_high,equivalent
+A4_vs_A1,0.02,0.0007,0.0,0.024,False
+A5_vs_A1,0.02,0.0034,0.0,0.0289,False
+A4_vs_A2,0.02,0.0044,0.0,0.0159,True
+A4_vs_A3,0.02,0.0043,0.0,0.0372,False
+A4_vs_A0,0.02,0.0401,0.0005,0.1367,False
+A5_vs_A0,0.02,0.0377,0.0009,0.1398,False

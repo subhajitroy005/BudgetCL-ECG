@@ -1,0 +1,19 @@
+arm,regime,trainable_params,trainable_weight_bytes,gradient_bytes,optimizer_bytes,replay_items,replay_value_bytes,replay_label_bytes,replay_flag_bytes,replay_classid_bytes,fixed_metadata_bytes,padding_bytes,persistent_total_bytes,persistent_fits_16384,transient_act_bytes_per_elem,transient_peak_elems,transient_peak_bytes,transient_policy,compute_multiplier
+A0,R1,0,0,0,0,0,0,0,0,0,0,0,0,True,4,16896,67584,inference-arena (no adaptation),1.0
+A0,R2,0,0,0,0,0,0,0,0,0,0,0,0,True,2,16896,33792,inference-arena (no adaptation),1.0
+A0,R3,0,0,0,0,0,0,0,0,0,0,0,0,True,2,16896,33792,inference-arena (no adaptation),1.0
+A1,R1,95,380,380,760,705,12690,705,705,705,49,0,16374,True,4,46,184,no-encoder-pass,1.0
+A1,R2,95,380,380,760,705,12690,705,705,705,49,0,16374,True,2,46,92,no-encoder-pass,1.0
+A1,R3,95,380,380,760,705,12690,705,705,705,49,0,16374,True,2,46,92,no-encoder-pass,1.0
+A2,R1,131,524,524,1048,678,12204,678,678,678,49,0,16383,True,4,65,260,no-encoder-pass,1.0
+A2,R2,131,524,524,1048,678,12204,678,678,678,49,0,16383,True,2,65,130,no-encoder-pass,1.0
+A2,R3,131,524,524,1048,678,12204,678,678,678,49,0,16383,True,2,65,130,no-encoder-pass,1.0
+A3,R1,167,668,668,1336,650,11700,650,650,650,49,0,16371,True,4,66,264,no-encoder-pass,1.0
+A3,R2,167,668,668,1336,650,11700,650,650,650,49,0,16371,True,2,66,132,no-encoder-pass,1.0
+A3,R3,167,668,668,1336,650,11700,650,650,650,49,0,16371,True,2,66,132,no-encoder-pass,1.0
+A4,R1,223,892,892,1784,62,12400,62,62,62,54,0,16208,True,4,39582,158328,retain-all,1.0
+A4,R2,223,892,892,1784,62,12400,62,62,62,54,0,16208,True,2,39582,79164,retain-all,1.0
+A4,R3,223,892,892,1784,62,12400,62,62,62,54,0,16208,True,2,21156,42312,checkpoint+recompute,1.993
+A5,R1,351,1404,1404,2808,52,10400,52,52,52,54,0,16226,True,4,39582,158328,retain-all,1.0
+A5,R2,351,1404,1404,2808,52,10400,52,52,52,54,0,16226,True,2,39582,79164,retain-all,1.0
+A5,R3,351,1404,1404,2808,52,10400,52,52,52,54,0,16226,True,2,21156,42312,checkpoint+recompute,1.993
