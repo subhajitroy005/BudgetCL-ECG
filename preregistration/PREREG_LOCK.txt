@@ -1,0 +1,10 @@
+PAPER 1 STATISTICAL PLAN — PRE-REGISTRATION LOCK
+=================================================
+plan_file:      preregistration/paper1_stat_plan.md
+plan_sha256:    3fddf151542346b69efa69a11b57f10a605348f32720f14f504d6af7d43954f5
+commit_sha:     391bc14792b6f101271027bc994b522b87097357
+locked_utc:     2026-07-22T11:06:30Z
+
+No equivalence (TOST) or MDE test may be executed before this lock exists.
+Every analysis script MUST verify that sha256(plan_file) == plan_sha256 above
+before computing any test statistic, and abort on mismatch.
