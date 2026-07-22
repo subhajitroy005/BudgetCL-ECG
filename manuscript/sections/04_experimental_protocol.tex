@@ -218,6 +218,28 @@ a subject-identity audit showed that it belongs to the same patient as DS1
 record 201 (Section~\ref{sec:cohort}); all affected analyses were rerun without
 changing the methods or the comparison family.
 
+\paragraph{Pre-registered equivalence and power plan.} The statistical unit is
+the patient ($n = 21$); no test uses the seed-level cell ($n \neq 105$) or the
+arm$\times$patient$\times$seed cell ($n \neq 630$). The equivalence margin
+$\delta = 0.02$ \macrof{}, the primary seed aggregation (\textbf{median} of the
+five seeds within each patient; mean is a declared sensitivity), the
+nonparametric two-one-sided-tests (TOST) procedure, the minimum-detectable-effect
+(MDE) method, and the family membership of the ablation test were fixed in a
+written plan and committed to version control \emph{before} any equivalence or
+MDE statistic was computed; the plan is hashed (SHA-256 \texttt{3fddf151\ldots})
+in a lock file whose commit timestamp precedes every result file it governs, and
+each analysis script verifies that hash before running. Equivalence for a
+comparison is declared iff the $90\%$ bias-corrected-and-accelerated (BCa)
+bootstrap interval ($10{,}000$ resamples, fixed seed) of the \emph{median} paired
+difference lies entirely within $[-\delta, +\delta]$. The MDE is the smallest
+constant shift the $21$-patient design detects at $80\%$ power under a Monte
+Carlo of the centered paired-difference vector, evaluated at each comparison's
+Holm-adjusted level. Two sensitivity analyses were pre-declared: with and without
+record 232, and mean in place of median aggregation. The plasticity ablation
+(B4--B2) is corrected within its own four-member E9 causal-ablation family, not
+pooled with the six primary comparisons, because it tests an adaptation
+\emph{mechanism} rather than an operating-point ranking.
+
 Seeds are averaged per patient before
 patient-wise paired tests. For each planned comparison we report the mean and
 median paired difference, a \textbf{patient bootstrap} 95\% confidence

@@ -76,13 +76,19 @@ route to settling it, and the cohort is now one record smaller than the
 protocol's nominal size. (ii)~Persistent-state totals are packed and asserted per cell, and the whole grid
 was replicated against a 1\,KiB firmware implementation reserve with no change in
 conclusions (Section~\ref{sec:reserve}); a byte-exact MCU port would still add
-allocator overhead not modeled here. (iii)~Peak SRAM, update latency, update
-energy, and Flash write volume are all unmeasured, and no hardware training loop
-was executed. \textbf{Training compute, update latency, cycles, and energy are
-unmeasured, and no numerical compute ratio is reported}, because the
-encoder-LoRA backward cost requires layer-level profiling or a complete
-reverse-mode derivation that this study does not provide
-(Appendix~\ref{sec:embedded}). (iv)~The regularization family is represented
+allocator overhead not modeled here. (iii)~Peak \emph{transient} state is no
+longer merely excluded: it is now reported as a byte-exact analytical liveness
+account under three implementation regimes (naive FP32, batch-1 FP16, and
+batch-1 FP16 with block rematerialisation), together with the recompute compute
+multiplier (Section~\ref{sec:method}, Appendix~\ref{sec:embedded},
+\texttt{results/e6\_two\_axis\_accounting.csv}). The claim that this transient
+can be aliased onto the arena the frozen model already provisions for inference
+is \emph{argued} from that account---the encoder arms' rematerialised transient
+($41.3\kib$ FP16) is $\approx1.25\times$ the inference arena ($33.0\kib$
+FP16)---rather than assumed. What remains genuinely unmeasured is the
+\emph{hardware}: peak SRAM, update latency, cycles, energy, and Flash write
+volume are analytical, not observed, and no hardware training loop was executed;
+a byte-exact MCU port would still add allocator overhead not modeled here. (iv)~The regularization family is represented
 here by \emph{one inexpensive, memory-matched $B$-factor anchor}
 (Section~\ref{sec:reg}), chosen because full-model FP32 EWC costs
 $53{,}144$\,B and is infeasible at this budget. Note it anchors the $B$ factor,

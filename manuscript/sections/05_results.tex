@@ -44,8 +44,9 @@ is the best use of the budget.
 \subsection{RQ2 --- Patient-level adaptation gain}
 
 \textbf{Takeaway:} both encoder-LoRA arms beat the frozen model with a large
-effect (Holm $p\le0.008$) and improve 17 of 21 patients, against 12 of 21 for
-maximum head-only replay, with stronger pooled minority-class performance.
+effect (significant after Holm correction under the pre-registered primary test;
+Table~\ref{tab:pairwise_tests}) and improve 17 of 21 patients, against 12 of 21
+for maximum head-only replay, with stronger pooled minority-class performance.
 
 Table~\ref{tab:primary_arms} reports the all-DS2 primary result: per-patient
 \macrof{} (seeds averaged), the number of patients improved versus A0, and
@@ -160,32 +161,44 @@ for the post-pool arms).}
 \end{figure}
 
 \paragraph{Direct paired tests.} Table~\ref{tab:pairwise_tests} and
-Fig.~\ref{fig:forest} report the six planned comparisons with Holm correction.
-Both encoder arms significantly beat the frozen model: A4--A0 mean $+0.136$
-(95\% CI $[0.055,0.239]$, Holm $p=0.007$, rank-biserial $0.77$) and A5--A0 mean
-$+0.143$ (CI $[0.054,0.252]$, Holm $p=0.008$, rank-biserial $0.75$). \textbf{Those
-are the only two comparisons that survive Holm correction.} The \emph{direct}
-comparisons against maximum head-only replay are not significant: A4--A1 mean
-$+0.017$ (Holm $p=0.25$) and A5--A1 mean $+0.023$ (Holm $p=0.11$), with intervals
-including zero. A4 versus the rank-2 post-pool adapter A3 is also not significant
-after correction (Holm $p=0.075$); on the contaminated 22-record cohort that
-contrast did clear the threshold ($p=0.047$), and losing it is a direct
-consequence of removing the non-disjoint record. The honest reading
-is that encoder plasticity reaches significance against the frozen baseline
-\emph{where post-pool volume does not}, and improves more patients, but direct
-superiority over maximum replay is \textbf{not} statistically established. This
-supports a replay--plasticity \emph{allocation} frontier rather than
-``depth beats volume.''
+Fig.~\ref{fig:forest} report the six pre-registered comparisons under the primary
+median-seed aggregation, with Holm correction, superiority, and the
+pre-registered equivalence test ($\delta = 0.02$ \macrof{}, 90\% BCa interval of
+the median paired difference; Section~\ref{sec:protocol}). Both encoder arms
+significantly beat the frozen model: A4--A0 median $+0.040$ (95\% BCa CI
+$[0.000,0.137]$, Holm $p=0.007$, rank-biserial $0.91$) and A5--A0 median $+0.038$
+(CI $[0.000,0.140]$, Holm $p=0.017$, rank-biserial $0.81$). \textbf{These are the
+only two comparisons that survive Holm correction.} The \emph{direct} comparisons
+against maximum head-only replay are \emph{inconclusive}, not null: A4--A1 has a
+median difference of $+0.0007$ and A5--A1 of $+0.0034$ (both Holm $p=0.079$), yet
+their 90\% equivalence intervals ($[0.000,0.024]$ and $[0.000,0.029]$) are not
+contained in $[-0.02,+0.02]$, so equivalence within the pre-specified margin is
+\emph{not} declared either. This 21-patient design detects a median shift no
+smaller than its minimum detectable effect ($\approx 0.010$--$0.040$ \macrof{}
+across the family; Table~\ref{tab:pairwise_tests}), and the observed A4--A1
+median lies below it. The one head-only contrast that \emph{does} clear the
+equivalence test is A4 versus the rank-1-equivalent post-pool adapter A2 (90\% CI
+$[0.000,0.016] \subset [-0.02,+0.02]$). The honest reading is a bounded
+replay--plasticity \emph{allocation} frontier: encoder plasticity reaches
+significance against the frozen baseline where post-pool volume does not and
+improves more patients (17/21 vs 12/21), while its direct superiority over
+maximum replay is neither established nor excluded at this sample size---not
+``depth beats volume.'' The A4--A1 equivalence verdict is sensitive to record
+232: dropping it moves the 90\% CI to $[0.000,0.020]$ and flips the verdict to
+equivalent (Section~\ref{sec:protocol}); we report this rather than pick the
+favourable cohort.
 
-\input{tables/table_pairwise_tests}
+\input{tables/table_V_paired_comparisons}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.82\textwidth]{fig_pairwise_effects.pdf}
-\caption{Forest plot of the planned paired comparisons (mean paired
-\macrof{} difference, patient bootstrap 95\% CI). Encoder arms clear zero
-against the frozen model (A4--A0, A5--A0) but not against maximum head-only
-replay (A4--A1, A5--A1).}
+\includegraphics[width=0.82\textwidth]{fig05_paired_differences.pdf}
+\caption{Planned paired comparisons: median paired \macrof{} difference with the
+90\% BCa interval, against the pre-registered $\pm\delta$ equivalence band
+($\delta = 0.02$). Encoder arms clear zero against the frozen model (A4--A0,
+A5--A0); against maximum head-only replay (A4--A1, A5--A1) the intervals are
+neither below the significance threshold after correction nor inside the
+equivalence band---bounded but inconclusive.}
 \label{fig:forest}
 \end{figure}
 

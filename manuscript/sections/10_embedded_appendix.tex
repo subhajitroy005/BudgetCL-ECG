@@ -114,6 +114,36 @@ by side so no arm's performance is ever quoted against a byte figure it was not
 measured under. A deployment should use the reserved counts; the primary table
 documents the pre-specified configuration.
 
+\subsection{Two-axis byte accounting: persistent and peak transient}
+
+Table~\ref{tab:two_axis} itemises both memory axes for every arm.
+Persistent state (the 16\,KiB-bounded axis) and peak transient (the excluded
+forward+backward working set) are reported side by side, the latter under three
+implementation regimes. The account is a byte-exact analytical liveness pass
+over the statically known graph; no hardware quantity is observed. The
+decisive structure is that the two axes are decoupled by the replay-point cliff:
+post-pool arms (A1--A3) never run the encoder during a step and cost a fraction
+of a KiB in transient, while the raw-replay encoder arms (A4/A5) pay
+$41.3\kib$ even under FP16 block rematerialisation---dominated by the
+$66\times128$ feed-forward tensor and its gradient---at a $1.99\times$ forward
+compute multiplier. Figure~\ref{fig:two_axis} plots the two axes jointly; every
+arm sits left of the 16\,KiB persistent line, but the encoder arms sit far above
+the 16\,KiB transient reference, which is the cost the persistent budget does not
+see.
+
+\input{tables/table_two_axis}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth]{fig13_two_axis_pareto.pdf}
+\caption{Two-axis budget: persistent state (x) versus peak transient working set
+(y, log), one marker per (arm, regime), with 16\,KiB reference lines on both
+axes. Post-pool arms occupy the low-transient floor; raw-replay encoder arms are
+storage-cheap but transient-expensive, and rematerialisation (R3) lowers but does
+not remove the gap.}
+\label{fig:two_axis}
+\end{figure}
+
 \subsection{Compute is not matched across arms}
 
 The arms are matched on persistent bytes but \emph{not} on compute, and the

@@ -13,7 +13,8 @@ rank-1 and
 rank-2 encoder low-rank adapters with only tens of raw replay samples raise
 per-patient \macrof{} from $0.666$ to $0.803$ and $0.809$, improve 17 of 21
 patients (versus 12 of 21 for maximum head-only replay), and are both
-significant against the frozen model (Holm $p\le0.008$) with large effect sizes.
+significant against the frozen model under the pre-registered primary test
+(Holm $p\le0.017$) with large effect sizes.
 Paired ablations attribute the target gain to encoder plasticity ($p = 0.005$)
 but leave replay's direct contribution statistically unsupported ($p = 0.473$),
 while replay provides substantially better source retention than the tested
@@ -43,6 +44,10 @@ remaining trained source variants, three RR-architecture / CNN variants that wer
 never trained, the unrun optimizer and higher-rank cells of the budget grid, a
 larger external cohort than six INCART subjects, and---for the strong
 ``plasticity beats volume'' claim---a larger patient cohort that could resolve the
-still-non-significant direct comparison. We make no claim of microcontroller deployment; the budget is
-analytical persistent state, and peak SRAM, latency, and energy are left to
-future hardware-in-the-loop work.
+direct comparison, which at $n = 21$ is bounded but inconclusive (neither
+superior after correction nor equivalent within the pre-registered
+$\delta = 0.02$ margin; minimum detectable effect $\approx 0.01$--$0.04$).
+We make no claim of microcontroller deployment; the budget is
+analytical persistent state, and peak transient state is reported analytically
+under three regimes (Section~\ref{sec:method}) while peak SRAM, latency, and
+energy remain for future hardware-in-the-loop work.

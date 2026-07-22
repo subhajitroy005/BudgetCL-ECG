@@ -60,6 +60,22 @@ the setting is patient-specific ECG adaptation rather than class-incremental
 vision, and the constraint is a byte-exact persistent-state budget rather than a
 bit-precision or feature-map allocation.
 
+The nearest biosignal neighbour is EpiSMART \cite{shahbazinia2025epismart}, which
+personalizes seizure detection on CHB-MIT with a size-constrained replay buffer
+and informed sample selection. We differ on the axes that matter for a byte
+budget: EpiSMART sizes its buffer by sample count and optimizes labeling burden,
+whereas we \emph{derive} replay capacity from a persistent-state ceiling and take
+the patient as the statistical unit under a pre-registered plan. The \emph{shape}
+of our frontier finding---that whether a budget is better spent on a frozen,
+larger feature buffer or on trainable capacity is budget-dependent---has
+precedent in vision: budget-conditioned frozen-versus-trainable extractors appear
+in class-incremental replay for fully-binary networks
+\cite{bassobert2025binaryreplay}, and backbone-versus-memory trade-offs are
+benchmarked for edge visual anomaly detection \cite{barusco2026vadedge}. Our
+differentiator is the regime and topology: the KiB persistent budget and the
+pooled-transformer replay-point cliff, where the substitution is a step function
+rather than a smooth backbone-size sweep.
+
 \subsection{Source-free and test-time adaptation}
 
 A parallel line of work adapts a trained model to a shifted target distribution

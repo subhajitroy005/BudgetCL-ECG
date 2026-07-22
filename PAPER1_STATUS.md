@@ -226,6 +226,76 @@ manuscript's primary (per the locked plan) before T3 rewrites the abstract numbe
 
 ---
 
+## T3 — Retitle and re-order the contribution  🟡 SUBSTANTIALLY COMPLETE
+
+Defaults applied (all reversible; logged in BLOCKERS.md): **median** primary (spec §4.2.2, locked),
+**A4–A1 = inconclusive/bounded** (spec §4.7 row 2). Owner may override ESC-1/ESC-2.
+
+### Done
+- **Title + subtitle + pdftitle + pdfkeywords** → cliff-led ("The Replay-Point Cliff: Why Pooled Tiny
+  Transformers Break Latent-Replay Assumptions at 16 KiB"). `main.tex`.
+- **Abstract rewritten** to §5.2 ordering (cliff → two-axis → plasticity → bounded frontier); null moved
+  to position 4 as "inconclusive/bounded"; median numbers (0.666→0.810/0.812, 16/21 vs 12, Holm ≤0.017);
+  software-only sentence preserved verbatim.
+- **Citations — all 7 groups verified as REAL records (no ESC-5).** Already present: Pellegrini
+  (`pellegrini2020latent`), Ravaglia (`ravaglia2021tinyml`), Busia (`busia2025tiny`). **Added 4** to
+  `references.tex`: EpiSMART (Shahbazinia et al., arXiv:2509.13974), binary-network (Basso-Bert et al.,
+  2503.07107), edge-anomaly benchmark (Barusco et al., 2604.06435), 2026 on-device-learning survey
+  (Pavan et al., 2605.31226). Survey's backprop-memory quote verified verbatim (PDF line 1840).
+  **Zero undefined citations** (checked cite-keys vs bibitems).
+- **§2 related work:** EpiSMART biosignal-neighbour differentiation + binary/anomaly "frontier-in-vision"
+  differentiation added.
+- **§3 method:** new argued "Persistent versus transient state" paragraph with T1 R1/R2/R3 numbers,
+  1.99× multiplier, ~300× asymmetry, 33 KiB inference-arena aliasing (ESC-1 caveat stated, not softened).
+- **§4 protocol:** pre-registration paragraph (n=21, median primary, δ=0.02 + lock SHA-256, TOST 90% BCa,
+  MDE, ablation as separate E9 family).
+- **§6 discussion:** survey-refutation subsection (verified Pavan quote + T1 41.3 KiB ≈ 2.5× buffer);
+  "17/21"→"16/21" count fixed to median.
+- **§7 limitations:** memory limitation rewritten — transient now reported analytically under 3 regimes,
+  aliasable-with-caveat (argued), while hardware remains unmeasured.
+- **Tables/figures generated:** `table_V_paired_comparisons.tex` (median, TOST+equiv cols), `fig03`,
+  `fig05` (±δ band), `fig13` (two-axis Pareto).
+- **`results/MANUSCRIPT_VALUE_MAP.md`** built — every headline number → source file.
+
+### Also done (second T3 pass)
+- **§5 results:** wired in `table_V_paired_comparisons` (now carries `\label{tab:pairwise_tests}`,
+  drop-in for the mean-based table); paired-tests paragraph rewritten to median primary with TOST +
+  MDE + record-232 fragility; `fig05` (±δ band) replaces the old forest plot.
+- **§10 appendix:** added "Two-axis byte accounting" subsection + `table_two_axis` (generated) + `fig13`.
+- Figures `fig03/fig05/fig13` copied into `manuscript/figures/` (graphicspath resolves them).
+- **ESC-2 resolution applied (reversible):** median governs the pre-registered **tests** (Table V,
+  §5 tests, §6, §8 significance → Holm ≤0.017); **descriptive** arm means stay mean-of-means
+  (0.803/0.809, 17/21) to match every released auto-generated table. Superseded Holm-p mentions
+  (0.008) updated/deferred to Table V; no stray primary `p=0.25/0.11` remain in prose.
+- **Final consistency sweep (this pass):** §6 bullet 2 still carried the stale mean-based frozen-model
+  bound `Holm p≤0.008`; corrected to **≤0.017** to match §5/§8 and the median primary
+  `e8_paired_tests.csv` (A4–A0 0.007, A5–A0 0.017). This was the last primary-headline straggler.
+- **§7 leak-narrative `0.047 → 0.075` deliberately NOT converted to median.** It is a mean-based
+  before/after of the 202-exclusion data-cleaning decision: `0.075` traces to
+  `e8_sensitivity_mean_aggregation.csv` (A4–A3 Holm 0.0747) and legacy `primary/E8_paired_tests.csv`;
+  `0.047` is the historical 22-record (leaked) value with no released file. Half-converting to
+  `0.047 → 0.079` would splice a 22-record mean value onto a 21-record median value in one arrow —
+  less honest than the coherent mean pair. The qualitative claim (excluding 202 removes A4–A3
+  significance) holds under median too, since median A4–A3 Holm = 0.079 (>0.05). Left as-is by design.
+- **Static checks pass:** all `\ref` resolve; `\begin`/`\end` balanced (46/46); all `\includegraphics`
+  and `\input` targets exist; zero undefined citations; software-only sentence intact verbatim;
+  abstract leads with the cliff; title cliff-led.
+
+### Remaining (genuinely blocked)
+1. **Compile clean** (`pdflatex`/`latexmk`): **no TeX Live on this host** — cannot run. Static checks
+   above substitute for structure; a real compile is still required to confirm zero undefined refs and
+   no new overfull hboxes.
+2. **Owner sign-off** on ESC-1 (T3 §5.7 framing) and ESC-2 (median-governs-tests resolution).
+3. **Optional (ESC-2 option B):** if the owner wants median as primary for **descriptive** stats too,
+   regenerate `E7_arm_summary`/forest/effect sizes under median (0.810/0.812) — a wide cascade over
+   released CSVs, deliberately NOT done unilaterally.
+
+**T3 ACCEPTANCE: substantially met.** Cliff-led reordering, argued two-axis distinction, pre-registered
+equivalence/MDE under a predating lock, and every edited number traced to `results/` are all in place
+and internally consistent. Only a TeX-environment compile and owner ESC sign-off remain.
+
+---
+
 ## Discrepancy log
 - **DISC-1** (T0): abstract "17 of 21 patients against 12 for maximum head-only replay" conflates
   vs-A0 (17 improved) with vs-A1 (14/16 improved). Verify per-patient A1-vs-A0 improved count during

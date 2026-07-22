@@ -72,6 +72,34 @@ forward and backward activations, stack and workspace, and allocator overhead,
 which are transient peak-SRAM quantities and are not measured anywhere in this
 paper (Table~\ref{tab:memcats}).
 
+\paragraph{Persistent versus transient state, argued.} Excluding the
+forward/backward working set is a modelling choice, and a reviewer is right to
+ask whether it was chosen to favour a conclusion. We therefore argue the split
+rather than assume it, using a byte-exact analytical liveness account of the
+adaptation graph (no hardware quantity is measured). The two axes carry
+\emph{separate shadow prices}. Persistent state is a statically reserved region
+whose ceiling is the 16\,KiB budget. Peak \emph{transient} state is the maximum
+simultaneously-live activation and gradient working set during one
+forward$+$backward step; it can be aliased onto the same arena the frozen model
+already provisions for inference, so it is charged differently. Crucially, the
+two axes are \emph{decoupled by the replay-point cliff}: post-pool replay stores
+the pooled vector, so head and post-pool-adapter adaptation (A1--A3) never run
+the encoder during a step and their peak transient is a fraction of a KiB
+(under $0.3\bytes\mathrm{K}$; $0.1\kib$ in a batch-1 FP16 regime). Raw replay
+(A4--A5) must run the full encoder forward and backward, so its transient is
+dominated by the $66\times128 = 8{,}448$-element feed-forward tensor and its
+gradient: $154.6\kib$ naive FP32, $77.3\kib$ at batch-1 FP16, and $41.3\kib$
+under batch-1 FP16 with block rematerialisation (compute multiplier
+$1.99\times$ forward FLOPs). That is a $\sim$300$\times$ asymmetry on the
+excluded axis. It does not vanish under rematerialisation, but it is largely
+\emph{aliasable}: the frozen-model inference arena is itself $33.0\kib$ at FP16
+(it holds the same feed-forward tensor), so the encoder arms' adaptation
+transient is only $\approx1.25\times$ the arena the device already reserves.
+The residual charge beyond inference is the feed-forward-hidden gradient. We
+report all three regimes rather than the single most favourable one; the full
+per-arm, per-regime table is in Appendix~\ref{sec:embedded} and the source is
+\texttt{results/e6\_two\_axis\_accounting.csv}.
+
 
 A complete persistent-state accounting includes
 \begin{equation}

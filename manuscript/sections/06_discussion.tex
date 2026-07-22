@@ -40,7 +40,7 @@ Supported by the 21-record patient-disjoint, five-seed primary evidence:
 \item patient-specific, target-informed adaptation improves the primary cohort
 under the analytical 16\,KiB budget;
 \item both encoder-LoRA arms significantly beat the frozen model at patient level
-(Holm $p\le0.008$), with large rank-biserial effects and CIs excluding zero ---
+(Holm $p\le0.017$), with large rank-biserial effects and CIs excluding zero ---
 these are the \emph{only} two of the six pre-specified comparisons that survive
 Holm correction;
 \item encoder arms improve more patients and give better pooled S and F
@@ -162,6 +162,27 @@ scale-ambiguous form, so it does not license the broader claim that a budget
 should never be spent on regularization --- restricted EWC, source-logit
 distillation, output-consistency regularization, and a $\|AB\|_F^2$ penalty are
 all untested here and could behave differently.
+
+\subsection{Backprop memory is not negligible at the KiB scale}
+
+A recent survey of on-device learning in TinyML states the prevailing
+assumption directly: ``since all continual learning solutions maintain a replay
+buffer of sufficient size to prevent catastrophic forgetting, the memory cost
+of backpropagation is unlikely to constitute a bottleneck relative to the buffer
+itself'' \cite{pavan2026odlsurvey}. Our two-axis account contradicts this in the
+16\,KiB regime. The replay buffer is bounded at 16\,KiB by construction, but the
+peak transient working set of the raw-replay encoder arms is $41.3\kib$ even
+under block rematerialisation at FP16 (Section~\ref{sec:method},
+Appendix~\ref{sec:embedded})---roughly $2.5\times$ the buffer, not a fraction of
+it. The assumption holds when the frozen frontend is deep and the buffer is
+large; it fails precisely at the KiB scale and pooled-transformer topology
+studied here, where a single $8{,}448$-element feed-forward tensor and its
+gradient dominate. The correct statement is conditional: backprop memory is
+negligible against the buffer only when the trainable subgraph is shallow (as in
+post-pool adaptation, whose transient is under $0.1\kib$); for encoder-level
+adaptation it is the larger of the two transient charges, and whether it is
+affordable depends on how much of it aliases the inference arena the device
+already provisions.
 
 \subsection{Clinical interpretation}
 

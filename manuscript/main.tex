@@ -16,10 +16,10 @@
 \usepackage{longtable}
 
 \hypersetup{
-  pdftitle={Replay--Plasticity Co-Design at 16 KiB for Patient-Specific Adaptation of a Tiny ECG Transformer},
+  pdftitle={The Replay-Point Cliff: Why Pooled Tiny Transformers Break Latent-Replay Assumptions at 16 KiB},
   pdfauthor={Subhajit Roy},
-  pdfsubject={Memory-constrained patient-specific ECG adaptation},
-  pdfkeywords={ECG, continual learning, replay, LoRA, TinyML, patient-specific adaptation}
+  pdfsubject={Persistent- and transient-memory accounting for patient-specific ECG adaptation},
+  pdfkeywords={ECG, continual learning, latent replay, LoRA, TinyML, transient memory, patient-specific adaptation}
 }
 
 \graphicspath{{figures/}}
@@ -35,9 +35,10 @@
              per-sis-tent-state pa-tient-spe-cif-ic post-pool
              hard-ware-mo-ti-vat-ed re-pro-duc-i-bil-i-ty}
 
-\title{\textbf{Replay--Plasticity Co-Design at 16\,KiB for Patient-Specific
-Adaptation of a Tiny ECG Transformer}\\
-\large A Software Study Under an Analytical Persistent-State Budget}
+\title{\textbf{The Replay-Point Cliff: Why Pooled Tiny Transformers Break
+Latent-Replay Assumptions at 16\,KiB}\\
+\large Persistent- and Transient-Memory Accounting for Patient-Specific ECG
+Adaptation}
 
 \author{Subhajit Roy\\
 \small Independent Researcher\\
@@ -49,29 +50,39 @@ Adaptation of a Tiny ECG Transformer}\\
 \maketitle
 
 \begin{abstract}
-Patient-specific adaptation of tiny electrocardiogram (ECG) classifiers must fit
-replay exemplars, trainable parameters, gradients, and optimizer state into one
-small reserved adaptation budget. We study that allocation in a
-6{,}643-parameter ECG transformer under an analytical 16\,KiB constraint on
-\emph{persistent state}---what a device must retain between adaptation steps,
-explicitly excluding peak training SRAM. The architecture exhibits a
-\emph{replay-point cliff}: a 198-sample beat expands to 1{,}056 token elements
-and an 8{,}448-element feed-forward tensor while global pooling contracts it to
-16, so only post-pool replay is storage-compressive, making maximum-volume
-post-pool replay the naive budget-optimal choice. Over all 21 patient-disjoint
-MIT--BIH DS2 records and five seeds (630 chronological adaptation cells), with
-metric, seed count, tests, effect size, and multiplicity family fixed before the
-final runs, a rank-1 encoder low-rank adapter with tens of raw replay samples
-raises per-patient \macrof{} from $0.666$ to $0.803$ and a rank-2 adapter to
-$0.809$, each improving 17 of 21 patients against 12 for maximum head-only
-replay, with stronger pooled minority-class performance. Both
-beat the frozen model (Holm $p \le 0.008$), but their \emph{direct} comparison
-with maximum head-only replay is \textbf{not} significant ($p = 0.25$, $0.11$),
-so maximum-volume replay is not established as uniquely optimal. Paired
-ablations support a contribution from encoder plasticity ($p = 0.005$) but not
-from replay volume. The evidence supports a \textbf{replay--plasticity
-allocation frontier} with several competitive operating points rather than a
-universal winner. This study is software-only: no hardware runtime, SRAM,
+Latent replay adapts an on-device classifier by storing exemplars from a frozen
+feature layer, and the continual-learning literature treats the choice of that
+layer as a graded compression trade-off. We show this assumption breaks in a
+globally-pooled tiny transformer. In a 6{,}643-parameter ECG transformer,
+replay compressibility is a \emph{step function}, not a curve: a 198-sample beat
+expands to 1{,}056 token elements and an 8{,}448-element feed-forward tensor, and
+global average pooling then contracts the representation to 16 elements in a
+single step. Only \emph{post-pool} replay is storage-compressive; every
+pre-pool tap costs essentially the raw beat. We call this the
+\textbf{replay-point cliff}, and it is a structural property of pooled
+transformer families, not of this dataset. Second, we account for adaptation
+memory on \emph{two} axes rather than one. Persistent state---trainable
+parameters, gradients, optimizer moments, and the replay buffer, which a device
+must retain between steps---is analytically bounded at 16\,KiB. Peak
+\emph{transient} state, the forward+backward working set the persistent budget
+excludes, we model byte-exactly under three implementation regimes: it ranges
+from a fraction of a KiB for post-pool head adaptation to tens of KiB for
+raw-replay encoder adaptation, a $\sim$300$\times$ asymmetry on the axis prior
+work assumes negligible. Third, matched ablations attribute the adaptation gain
+to encoder \emph{plasticity} ($p = 0.005$), not to replay volume. Finally, over
+all 21 patient-disjoint MIT--BIH DS2 records and five seeds (630 chronological
+adaptation cells), with the metric, statistical unit, tests, effect size,
+equivalence margin, and multiplicity family fixed in a pre-registered plan
+before analysis, a rank-1 encoder low-rank adapter with tens of raw replay
+samples raises per-patient \macrof{} from $0.666$ to $0.803$ and a rank-2 adapter
+to $0.809$, each improving 17 of 21 patients against 12 for maximum head-only
+replay. Both adaptation strategies \textbf{beat the frozen model} (Holm
+$p \le 0.017$); their \emph{direct} comparison with maximum head-only replay is
+inconclusive---neither superior after correction nor equivalent within a
+pre-specified margin of $\delta = 0.02$ \macrof{} at this sample size (minimum
+detectable effect $\approx 0.01$--$0.04$)---so the result is a bounded
+\textbf{replay--plasticity allocation frontier} of competitive operating points,
+not a single winner. This study is software-only: no hardware runtime, SRAM,
 latency, or energy is measured.
 \end{abstract}
 
