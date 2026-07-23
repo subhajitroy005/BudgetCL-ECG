@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import csv
 from pathlib import Path
-from statistics import (
+from budget_stats import (
     PRESPECIFIED_FAMILY,
     holm_correct,
     paired_bootstrap_ci,

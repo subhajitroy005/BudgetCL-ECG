@@ -9,10 +9,16 @@ interpretation. Compression determines how many exemplars \emph{fit}, but not
 how useful the remaining trainable subspace is. Maximum post-pool replay (A1)
 fixes the representation and buys volume; raw replay is expensive per item but
 leaves budget for attention-level updates. Across all 21 patients, the second
-allocation improves more patients (17/21 versus 12/21) and every pooled
+allocation improves more patients (16/21 versus 12/21) and every pooled
 minority-class metric, even though it stores an order of magnitude fewer
 exemplars. The cliff tells you where you \emph{may} replay; it does not tell you
 where you \emph{should}.
+\footnote{All primary-cohort figures use the pre-registered locked estimator
+(median over seeds within patient, then across patients). Secondary and
+sensitivity analyses (E9 ablation, E15 regularization, E16 reserve, E17
+split-first, E12 label curve, E13 cross-database) report seeds-mean-averaged
+descriptive statistics; those values are flagged where they appear and their
+median unification is deferred (\texttt{BLOCKERS.md}, ESC-4).}
 
 \subsection{Why encoder adaptation may help}
 
@@ -45,7 +51,7 @@ these are the \emph{only} two of the six pre-specified comparisons that survive
 Holm correction;
 \item encoder arms improve more patients and give better pooled S and F
 performance than maximum head-only replay, with $\approx 12\times$ fewer
-exemplars, though the margin in improved-patient count narrows from six patients
+exemplars, though the margin in improved-patient count narrows from four patients
 to two once a meaningful-change threshold is applied;
 \item the target-side benefit is attributable to encoder plasticity (B4$-$B2,
 $p = 0.005$, 16/21 patients); the replay contrast is positive in mean but not
@@ -183,6 +189,41 @@ post-pool adaptation, whose transient is under $0.1\kib$); for encoder-level
 adaptation it is the larger of the two transient charges, and whether it is
 affordable depends on how much of it aliases the inference arena the device
 already provisions.
+
+There is a corollary for the standard memory-for-compute trade. Block-level
+rematerialisation buys the encoder arms a $1.87\times$ peak-transient reduction
+($79{,}164 \to 42{,}312\bytes$) at a $1.993\times$ forward-compute multiplier
+(\texttt{results/e6\_two\_axis\_accounting.csv}), so at this scale you pay
+marginally more in compute than you recover in memory and checkpointing is close
+to value-neutral. The reason is structural: the $8{,}448$-element feed-forward
+hidden tensor and its gradient dominate the working set so completely that
+checkpointing at block granularity cannot escape them, which implies that further
+shrinking the encoder-adaptation transient requires finer-grained
+rematerialisation or a topology change, not more block checkpointing.
+
+\subsection{Responder structure (exploratory, post-hoc)}
+
+\emph{This subsection is exploratory and post-hoc. It was not pre-registered, it
+is hypothesis-generating rather than confirmatory, and it would need its own
+pre-registration to be treated as a test. No inferential statistic is reported for
+it, and it does not change the pre-registered primary result.}
+
+Looking at where the A4-versus-A1 contrast lives across patients is descriptively
+informative. The per-patient median-within A4$-$A1 differences
+(\texttt{results/r8\_responder\_exploratory.csv}) split 14 better, 3 exactly
+tied, and 4 worse, and range from $-0.033$ to $+0.167$; three patients alone
+account for $61\%$ of the total positive mass. In other words the two allocations
+look interchangeable for most patients and materially apart for a small
+minority. This single observation is consistent, descriptively, with the whole
+cluster of otherwise puzzling numbers in Table~\ref{tab:pairwise_tests}: a median
+paired difference near zero, a rank-biserial around $0.72$, a mean paired
+difference an order of magnitude above the median, and an equivalence test that
+fails on its upper bound alone. A natural next question---whether the responding
+minority is characterised by higher minority-class support in the adaptation
+window---cannot be answered from the released files, which carry no per-record
+class-support counts (\texttt{BLOCKERS.md}, ESC-6); we flag it as the follow-up a
+dedicated, pre-registered analysis would pursue rather than reporting an untraceable
+correlation here.
 
 \subsection{Clinical interpretation}
 

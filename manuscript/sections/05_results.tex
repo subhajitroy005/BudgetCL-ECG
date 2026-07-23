@@ -45,41 +45,53 @@ is the best use of the budget.
 
 \textbf{Takeaway:} both encoder-LoRA arms beat the frozen model with a large
 effect (significant after Holm correction under the pre-registered primary test;
-Table~\ref{tab:pairwise_tests}) and improve 17 of 21 patients, against 12 of 21
+Table~\ref{tab:pairwise_tests}) and improve 16 of 21 patients, against 12 of 21
 for maximum head-only replay, with stronger pooled minority-class performance.
 
 Table~\ref{tab:primary_arms} reports the all-DS2 primary result: per-patient
-\macrof{} (seeds averaged), the number of patients improved versus A0, and
-pooled S-class F1. Both encoder-LoRA arms dominate the frozen model and improve
-the most patients. A5 reaches the best per-patient mean ($0.809\pm0.179$) and A4
-the same 17/21 improved count with a slightly lower mean ($0.803\pm0.170$); by
-contrast, maximum-volume head-only replay (A1) improves only 12/21 patients
-despite storing $\approx 11\times$ more exemplars. Fig.~\ref{fig:primary} shows
+\macrof{} (seeds median-aggregated within patient, the pre-registered locked
+estimator), the number of patients improved versus A0, and pooled S-class F1.
+Both encoder-LoRA arms dominate the frozen model and improve the most patients.
+A5 reaches the best per-patient score ($0.811\pm0.179$) and A4 nearly matches it
+($0.810\pm0.176$) at the same 16/21 improved count; by contrast,
+maximum-volume head-only replay (A1) improves only 12/21 patients despite storing
+$\approx 11\times$ more exemplars. Fig.~\ref{fig:primary} shows
 the per-patient distribution and Fig.~\ref{fig:waterfall} the sorted per-patient
 gain; both make clear that the mean is carried by a minority of patients.
 
-\paragraph{Patient safety, and what the improvement counts do and do not mean.}
+\paragraph{Seed stability.} A descriptive point that costs nothing and does not
+depend on the inconclusive superiority comparison: the arms differ sharply in how
+much their arm-level score depends on the seed-aggregation rule. Comparing
+mean-over-seeds and median-over-seeds central values
+(\texttt{results/r0\_estimator\_matrix.csv}), maximum head-only replay (A1) moves
+$0.786 \to 0.743$, a $0.043$ gap---its arm mean sits well above its median because
+a minority of favourable seeds inflate it---while rank-1 LoRA (A4) moves
+$0.803 \to 0.777$ ($0.026$) and rank-2 LoRA (A5) is essentially
+aggregation-invariant at $0.809$ versus $0.813$ ($0.004$). Maximum head-only
+replay is thus the \emph{least seed-stable} arm tested and the proposed encoder
+arms the most stable. No test was pre-registered for this contrast, so we report
+it descriptively.
 Aggregate means hide the fact that adaptation is not uniformly beneficial, so we
 report the harm side explicitly, and we report it at two thresholds because the
 choice of threshold changes the story materially.
 
-Counting any decline as harm, the encoder arms harm 4 of 21 patients and
-maximum head-only replay harms 8, which makes the encoder arms look safer.
-That impression does not survive a meaningful threshold. Defining the harm rate
-$R_{\mathrm{harm}} = |\{p : G_p < -\epsilon\}| / P$ with $\epsilon = 0.02$
+Counting any decline as harm, the encoder arms harm two (A4) and three (A5) of 21
+patients and maximum head-only replay harms 8, which makes the encoder arms look
+safer. That impression does not survive a meaningful threshold. Defining the harm
+rate $R_{\mathrm{harm}} = |\{p : G_p < -\epsilon\}| / P$ with $\epsilon = 0.02$
 stated before analysis, the counts become A1 $0/21$
-($R_{\mathrm{harm}} = 0.000$), A2 $1/21$, A3 $2/21$, A4 $2/21$, and A5 $2/21$
+($R_{\mathrm{harm}} = 0.000$), A2 $2/21$, A3 $3/21$, A4 $2/21$, and A5 $2/21$
 (Table~\ref{tab:harm}) --- so on this measure \textbf{maximum head-only replay is
 the \emph{safest} arm}, harming nobody measurably, while the encoder arms each
 harm two patients. \textbf{Most of the apparent harm
 advantage of the encoder arms is sub-threshold noise}: at $\epsilon = 0.02$ the
-adapted arms harm zero (A1) to two (A3, A4, A5) patients each. The same correction
-applies to the improvement counts: the headline 17/21 for A4 and A5 falls to
-12/21 when small changes are excluded, against 11/21 for A1. The encoder arms
-remain ahead on the improvement count, but by one patient rather than five, and
+adapted arms harm zero (A1) to three (A3) patients each. The same correction
+applies to the improvement counts: the headline 16/21 for A4 and A5 falls to
+12/21 when small changes are excluded, against 10/21 for A1. The encoder arms
+remain ahead on the improvement count, but by two patients rather than four, and
 they are \emph{worse} on the harm count. What separates them is the size of the
-tail loss rather than its frequency: A4's worst patient loses $0.034$ where A3's
-loses $0.052$ and A5's $0.123$.
+tail loss rather than its frequency: A4's worst patient loses $0.029$ where A3's
+loses $0.050$ and A5's $0.112$.
 
 We keep the threshold-free counts in Table~\ref{tab:primary_arms} because they
 are what the pre-specified plan defined, and report the thresholded counts beside
@@ -181,12 +193,36 @@ equivalence test is A4 versus the rank-1-equivalent post-pool adapter A2 (90\% C
 $[0.000,0.016] \subset [-0.02,+0.02]$). The honest reading is a bounded
 replay--plasticity \emph{allocation} frontier: encoder plasticity reaches
 significance against the frozen baseline where post-pool volume does not and
-improves more patients (17/21 vs 12/21), while its direct superiority over
+improves more patients (16/21 vs 12/21), while its direct superiority over
 maximum replay is neither established nor excluded at this sample size---not
-``depth beats volume.'' The A4--A1 equivalence verdict is sensitive to record
-232: dropping it moves the 90\% CI to $[0.000,0.020]$ and flips the verdict to
-equivalent (Section~\ref{sec:protocol}); we report this rather than pick the
-favourable cohort.
+``depth beats volume.'' \textbf{The A4--A1 equivalence verdict is not robust and
+turns on a single record.} With all 21 records the $90\%$ BCa upper bound is
+$0.0240$, above the $\delta = 0.020$ margin, so equivalence is \emph{not}
+declared; dropping record 232 alone lowers that bound to $0.0198$---below the
+margin by just $0.0002$---and flips the verdict to equivalent
+(\texttt{results/e8\_sensitivity\_record232.csv}). Record 232 is the
+sixth-largest A4$-$A1 gain ($+0.0428$), so the equivalence conclusion rests on one
+patient and a $0.0002$-\macrof{} margin and is not robust in either direction. We
+report this rather than pick whichever cohort gives the tidier verdict.
+
+\paragraph{Why the paired statistic looks smaller than the arm gap.} A reader
+comparing the arm summaries (A4 at $0.810$, A1 at $0.785$) sees a gap of about
+$0.025$, whereas the pre-registered test statistic---the \emph{median of the
+per-patient paired differences}---is $+0.0007$, roughly $36\times$ smaller. This
+is not an arithmetic error: the median of differences equals the difference of
+medians only when the difference distribution is symmetric, and here it is
+strongly right-skewed. The 21 per-patient A4$-$A1 differences run from $-0.033$ to
+$+0.167$ with 14 positive, 3 exactly zero, and 4 negative; three patients alone
+hold $61\%$ of the total positive mass. The mean paired difference ($+0.025$) and
+the difference of arm central values ($+0.025$ for the locked estimator, $+0.034$
+for a median-of-medians summary) are therefore an order of magnitude above the
+median paired difference. The pre-registered statistic is the latter, which is why
+the direct A4$-$A1 comparison is inconclusive despite the visibly larger arm gap.
+The bootstrap interval reflects the same structure: the $95\%$ and $90\%$ BCa
+lower bounds are \emph{exactly} $0.000$ because 3 patients have exactly zero
+difference and only 4 are negative, so a resampled median can never fall below
+zero. This is a property of a skewed, zero-heavy difference distribution, not a
+clipping artifact in the estimator.
 
 \input{tables/table_V_paired_comparisons}
 
@@ -563,8 +599,10 @@ Table~\ref{tab:splitfirst_contrasts} recomputes the four contrasts that matter
 on the split-first cohort, reporting both raw and family-corrected $p$-values.
 These four form their own sensitivity family and are \emph{not} pooled with the
 six pre-specified primary comparisons. Both
-encoder arms remain significantly above the frozen model with identical
-improved-patient counts ($17/21$), and the two comparisons against maximum
+encoder arms remain significantly above the frozen model on the split-first
+cohort (under the locked estimator A4 improves $16/21$ patients and A5 $17/21$;
+the arm \macrof{} in Table~\ref{tab:splitfirst} is seeds mean-averaged, ESC-4),
+and the two comparisons against maximum
 head-only replay remain non-significant, so the paper's central refusal to claim
 superiority over A1 is unaffected. The one substantive change is that the
 \emph{margin} over A1 shrinks --- A4$-$A1 falls from $+0.017$ to $+0.004$ and

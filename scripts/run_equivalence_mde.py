@@ -35,8 +35,8 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from statistics import holm_correct, paired_test, rank_biserial  # noqa: E402
-from statistics.bca import BCA_SEED, bca_ci  # noqa: E402
+from budget_stats import holm_correct, paired_test, rank_biserial  # noqa: E402
+from budget_stats.bca import BCA_SEED, bca_ci  # noqa: E402
 
 warnings.filterwarnings("ignore", message="Exact p-value calculation")
 

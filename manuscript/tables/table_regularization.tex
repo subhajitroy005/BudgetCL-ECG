@@ -9,7 +9,9 @@ zero-initialised and the frozen base weights \emph{are} the anchor, it costs
 Penalising $B$ rather than the product $AB$ is scale-ambiguous and constrains the
 parametrisation rather than the function; this is a low-cost baseline, not the
 strongest regularizer available. $\Delta^{\mathrm{src}}$ is the signed
-source-domain \macrof{} change.}
+source-domain \macrof{} change. \emph{Arm \macrof{} values are seeds mean-averaged
+within patient; median unification of this secondary baseline is deferred
+(\texttt{BLOCKERS.md}, ESC-4).}}
 \label{tab:regularization}
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{llccrrrr}

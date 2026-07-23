@@ -1,8 +1,12 @@
 # Manuscript value map
 
 Every numeric claim in the manuscript → its source file under `results/` (or the
-generator that writes it). Numbers are the **pre-registered median-primary** values
-(spec §4.2.2); the mean values remain in `e8_sensitivity_mean_aggregation.csv`.
+generator that writes it). Primary-cohort numbers use the **pre-registered locked
+estimator** `mean_of_medians` (median over seeds within patient, then mean across
+patients; spec §4.2.2). Mean-of-means values remain in
+`e8_sensitivity_mean_aggregation.csv` (sensitivity b). Secondary/sensitivity
+experiments (E9/E12/E15/E16/E17/E13) still report seeds-mean-averaged descriptives,
+labelled in-text and deferred per `BLOCKERS.md` ESC-4.
 
 ## Abstract / headline
 
@@ -10,11 +14,13 @@ generator that writes it). Numbers are the **pre-registered median-primary** val
 |---|---|---|---|
 | 6,643 | model parameters | `manifests/source_checkpoint_manifest.json` | `parameters` |
 | 1,056 / 8,448 / 16 | token / FFN / pooled elements | `scripts/gen_e6_accounting.py` (T×d_model, T×d_ff, d_model) | — |
-| 0.666 | A0 mean macro-F1 | `results/primary/E7_arm_summary.csv` | A0 `mean` (median-agg identical: 0.6664) |
-| 0.810 | A4 mean (median-agg) | recomputed by `run_equivalence_mde.py` | A4 arm central |
-| 0.812 | A5 mean (median-agg) | recomputed by `run_equivalence_mde.py` | A5 arm central |
-| 16 of 21 | A4/A5 patients improved vs A0 (median) | `run_equivalence_mde.py` improved count | A4/A5–A0 |
-| 12 | A1 patients improved vs A0 (median) | `run_equivalence_mde.py` improved count | A1–A0 |
+| 0.666 | A0 per-patient macro-F1 (locked `mean_of_medians`) | `results/primary/E7_arm_summary_median.csv` | A0 `macro_f1_mean_of_medians` (0.6664) |
+| 0.810 | A4 per-patient macro-F1 (locked `mean_of_medians`) | `results/primary/E7_arm_summary_median.csv` | A4 `macro_f1_mean_of_medians` (0.8104) |
+| 0.811 | A5 per-patient macro-F1 (locked `mean_of_medians`) | `results/primary/E7_arm_summary_median.csv` | A5 `macro_f1_mean_of_medians` (0.8115; single-round of 0.81147 = 0.811, ESC-3) |
+| 0.785 | A1 per-patient macro-F1 (locked `mean_of_medians`) | `results/primary/E7_arm_summary_median.csv` | A1 `macro_f1_mean_of_medians` (0.7852) |
+| 16 of 21 | A4/A5 patients improved vs A0 (median-within) | `results/r0_estimator_matrix.csv` / `results/r1_headline_values.csv` | median improved count |
+| 12 | A1 patients improved vs A0 (median-within) | `results/r0_estimator_matrix.csv` / `results/r1_headline_values.csv` | median improved count |
+| 14 | A4 patients improved vs A1 (median-within) | `results/r1_headline_values.csv` | median improved count |
 | Holm p ≤ 0.017 | A4/A5 vs A0 significance | `results/e8_paired_tests.csv` | `p_holm` A4–A0 (0.007), A5–A0 (0.017) |
 | p = 0.005 | plasticity ablation (B4−B2) | `results/ablations/E9_paired_contrasts.csv` | `p_wilcoxon` B4_minus_B2 |
 | δ = 0.02 | equivalence margin | `preregistration/paper1_stat_plan.md` | §1 |

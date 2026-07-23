@@ -307,3 +307,98 @@ and internally consistent. Only a TeX-environment compile and owner ESC sign-off
 - **DISC-4** (T2): abstract numbers (mean-based) differ from pre-registered median primary → see ESC-2.
 - **ESC-1** (T1): A4/A5 R3 transient 41.3 KiB > 24 KiB → T3 framing. BLOCKERS.md.
 - **ESC-2** (T2): median-primary changes headline numbers → owner confirms primary. BLOCKERS.md.
+
+---
+
+# Review Change Block 1 — Estimator Unification and Disclosure Fixes
+
+Baseline `e52c5b5`. Locked estimator: `mean_of_medians` (median over seeds within
+patient, then mean across patients). Escalations in `BLOCKERS.md` (ESC-3..ESC-6).
+
+## R0 — Verification gate ✅
+`scripts/r0_estimator_matrix.py` → `results/r0_estimator_matrix.csv`. Matrix matches
+the review checksum to 4 dp (A0 0.6664 / A1 0.7852 / A4 0.8104 / A5 0.8115 under
+`mean_of_medians`); improved counts 17/17/12/14 mean-within, **16/16/12/14**
+median-within. **PASS** — review and repository agree on the raw data.
+
+## R1 — Descriptive unification [BLOCKING] ✅
+`scripts/r1_arm_summary_median.py` → `results/primary/E7_arm_summary_median.csv`
+(supersedes `E7_arm_summary.csv`, logged in `SUPERSEDED.md`) + `results/r1_headline_values.csv`.
+Root cause confirmed: `run_statistics.py:71` reduces seeds by **mean**; locked plan
+uses **median**. `results/e8_*.csv` **unmodified** (verified via git). CI on the mean
+of per-patient medians reuses `patient_bootstrap_ci`.
+
+## R2 — Manuscript number sweep [BLOCKING] ✅ (primary) + ESC-4 (secondary)
+- Abstract, §5 RQ2, §6, §8 → A4 **0.810**, A5 **0.811** (ESC-3: traceable single-round
+  of 0.81147; review's 0.812 is a double-round), A0 0.666, A1 0.785; improved counts
+  **16/21** (A1 stays 12/21). `table_primary_arms.tex` + `table_harm.tex` regenerated
+  under median (`scripts/r1_regen_primary_tables.py`); harm counts updated
+  (A2 harm 1→2, A3 2→3, A1 thresholded-improved 11→10, etc.).
+- Secondary experiments (E9/E12/E15/E16/E17) still seeds-mean-averaged; every
+  occurrence caption-labelled "seeds mean-averaged" + global §6 footnote. Full
+  unification deferred (ESC-4): blocked by rule 2 (embedded secondary test p-values)
+  and E9 missing per-seed data for B2/B3/B6/B7.
+- `MANUSCRIPT_VALUE_MAP.md` rebuilt from `r1_headline_values.csv`.
+
+## R3 — Skew reconciliation ✅
+§5 paragraph after the direct-tests discussion: median paired diff +0.0007 vs arm gap
++0.025 (~36×) explained by right-skew (14 better / 3 tied / 4 worse; top-3 hold 61%);
+BCa lower bound = 0.000 explained as 3 zeros + 4 negatives, not a clipping bug.
+
+## R4 — Two-axis precision disclosure ✅ + R4.3 check recorded
+Three ratios in §3, each labelled by denominator: survey refutation 2.58×
+(42,312÷16,384, §6); aliasing same-precision **1.25×** (21,156÷16,896 elems);
+aliasing deployed reality **2.50×** (42,312 B FP16 ÷ 16,896 B INT8).
+**R4.3 deployed-precision check:** the accounting computes the A0 inference arena at
+FP16 (33,792 B); the repo carries no explicit inference-precision config field, but
+`replay_precision="int8"` (`gen_e6_accounting.py:220`, `e6_accounting_report.md:9`)
+establishes an INT8 deployment pipeline, consistent with 16 KiB-class TinyML
+convention. The 2.50× ratio names the FP16-adaptation-vs-INT8-inference assumption
+explicitly. Escalation trigger 3 (deployed inference is NOT INT8) does **not** fire —
+no evidence contradicts INT8; the FP16 arena figure is the matched-precision basis for
+the 1.25× ratio.
+
+## R5 — Rematerialization trade ✅
+§6: block rematerialisation buys 1.87× peak-transient (79,164→42,312 B) at 1.993×
+compute — value-neutral at this scale; FFN-hidden tensor+gradient dominate, so finer
+granularity or topology change is needed, not block checkpointing. §7: on an
+energy-constrained wearable this is a losing trade unless memory is the binding
+constraint.
+
+## R6 — Seed-stability asymmetry ✅
+§5 descriptive paragraph: A1 mean↔median gap 0.043 (least stable), A4 0.026, A5 0.004
+(invariant); framed descriptively, no test (source `r0_estimator_matrix.csv`).
+
+## R7 — Record-232 fragility ✅
+§5 (prominent, not footnote) + §7: full-cohort 90% upper 0.0240 (not equiv.) vs
+drop-232 0.0198 (equiv.), margin **0.0002**, record 232 = +0.0428 (6th-largest);
+verdict not robust either direction. Source `e8_sensitivity_record232.csv`.
+
+## R8 — Responder structure [EXPLORATORY] ✅ + ESC-6
+`scripts/r8_responder_exploratory.py` → `results/r8_responder_exploratory.csv`.
+§6 subsection explicitly headed exploratory/post-hoc: 14/3/4 split, top-3 hold 61%;
+no p-value, no hypothesis-testing vocabulary, absent from abstract. The minority-class
+support correlation is **escalated (ESC-6)**: no per-record class-support file and no
+raw `.atr` annotations in the repo; rule 3 forbids inventing it.
+
+## R9 — Automated value-map guard ✅
+`tests/test_manuscript_values.py` (5 tests): value-map source files exist; headline CSV
+matches arm summary; abstract carries locked values; superseded values absent from
+primary-headline files. **Acceptance verified**: passes now; fails when 0.803 is
+reintroduced into the abstract. Wired into `Makefile` (`verify-values`, `verify-paper`)
+and CI (`tests.yml` runs `pytest -v`).
+
+## R10 — Repository hygiene ✅
+`git mv statistics budget_stats` (stdlib-shadowing removed). Importers updated:
+`run_statistics.py`, `run_equivalence_mde.py` (2), `r1_arm_summary_median.py`,
+`tests/test_statistics.py`; `README.md` note added. `run_equivalence_mde.py` still
+asserts the pre-registration hash (`assert_lock()`), prereg SHA-256 still matches
+`PREREG_LOCK.txt`. Full suite: **91 passed**.
+
+## Definition of done — status
+One estimator (`mean_of_medians`) governs the primary cohort and all pre-registered
+tests; every primary number traces to a file and `tests/test_manuscript_values.py`
+enforces it. Skew, memory ratios, record-232, and responder structure disclosed at
+true strength. **Open:** secondary-experiment unification (ESC-4), support correlation
+(ESC-6), A5 3-dp convention (ESC-3), and a clean TeX compile (no TeX Live on host).
+All edits uncommitted per "commit only when asked."

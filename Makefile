@@ -64,6 +64,10 @@ tables:  ## Regenerate every LaTeX table from released CSVs
 
 verify-paper:  ## Check every manuscript number against the released artifacts
 	$(PYTHON) scripts/verify_manuscript_numbers.py
+	pytest -q tests/test_manuscript_values.py
+
+verify-values:  ## Guard: locked-estimator headline values vs value map (R9)
+	pytest -q tests/test_manuscript_values.py
 
 audit:  ## Run the leakage and reproducibility audit
 	$(PYTHON) scripts/leakage_audit.py

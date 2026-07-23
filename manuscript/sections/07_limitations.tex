@@ -84,8 +84,13 @@ multiplier (Section~\ref{sec:method}, Appendix~\ref{sec:embedded},
 \texttt{results/e6\_two\_axis\_accounting.csv}). The claim that this transient
 can be aliased onto the arena the frozen model already provisions for inference
 is \emph{argued} from that account---the encoder arms' rematerialised transient
-($41.3\kib$ FP16) is $\approx1.25\times$ the inference arena ($33.0\kib$
-FP16)---rather than assumed. What remains genuinely unmeasured is the
+($41.3\kib$ FP16) is $\approx1.25\times$ the inference arena at matched FP16
+precision ($33.0\kib$), but $\approx2.50\times$ the $16.5\kib$ INT8 arena a
+deployed quantised model actually provisions (Section~\ref{sec:method})---rather
+than assumed. The rematerialisation that reaches $41.3\kib$ is itself a poor
+bargain on an energy-constrained wearable: it costs a $1.993\times$ forward-compute
+multiplier to save $1.87\times$ peak memory, a losing trade unless memory is the
+hard binding constraint. What remains genuinely unmeasured is the
 \emph{hardware}: peak SRAM, update latency, cycles, energy, and Flash write
 volume are analytical, not observed, and no hardware training loop was executed;
 a byte-exact MCU port would still add allocator overhead not modeled here. (iv)~The regularization family is represented
@@ -112,6 +117,12 @@ limited raw replay significantly improves over the frozen model, produces
 stronger pooled minority-class performance, and yields more threshold-free
 positive patient changes than maximum-volume post-pool replay. However, the
 direct average difference from maximum-volume head-only replay is
-\textbf{not statistically significant}. The evidence therefore supports co-design
+\textbf{not statistically significant}. The \emph{equivalence} direction is no
+firmer: the A4$-$A1 verdict is decided by a single record. With all 21 records the
+$90\%$ BCa upper bound ($0.0240$) exceeds the $\delta = 0.020$ margin, but dropping
+record 232---the sixth-largest gain at $+0.0428$---lowers it to $0.0198$, inside
+the margin by $0.0002$, and flips the verdict to equivalent. Neither the
+superiority nor the equivalence conclusion for A4$-$A1 is robust, and we resolve
+the tie in neither direction. The evidence therefore supports co-design
 and several competitive operating points rather than a universal winner, and no
 sentence in this paper should be read as establishing superiority over A1.

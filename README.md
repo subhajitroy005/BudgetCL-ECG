@@ -101,7 +101,7 @@ competitive operating points** — not "depth beats volume".
 budget_cl/        reusable implementation (models, adaptation, replay, memory,
                   training, evaluation, data, quantization, utils)
 preprocessing/    ECG front ends: original (non-causal) and split-first (E17)
-statistics/       bootstrap, Wilcoxon, Holm, TOST, effect sizes
+budget_stats/     bootstrap, Wilcoxon, Holm, TOST, effect sizes (renamed from statistics/ to avoid shadowing the stdlib)
 configs/          frozen YAML: every experiment-defining value lives here
 manifests/        exact records, subjects, and replay selections
 experiments/      thin runners over budget_cl/

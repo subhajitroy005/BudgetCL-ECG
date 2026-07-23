@@ -1,20 +1,20 @@
 % GENERATED FILE -- do not edit by hand.
-% Regenerate with: make tables  (scripts/make_tables.py)
+% Regenerate with: python3 scripts/r1_regen_primary_tables.py
 \begin{table}[H]
 \centering
 \small
-\caption{Per-patient \macrof{} over the 21-record patient-disjoint cohort, five seeds averaged within patient. Intervals are patient bootstraps ($10{,}000$ resamples).}
+\caption{Per-patient \macrof{} over the 21-record patient-disjoint cohort, five seeds \textbf{median-aggregated within patient} (the pre-registered locked estimator). Intervals are patient bootstraps ($10{,}000$ resamples).}
 \label{tab:primary_arms}
 \begin{tabular}{lrrrl}
 \toprule
 Arm & Mean & SD & Median & 95\% CI \\
 \midrule
 A0 (frozen) & $0.666$ & $0.245$ & $0.666$ & $[0.563, 0.766]$ \\
-A1 (head $+$ max replay) & $0.786$ & $0.177$ & $0.747$ & $[0.713, 0.860]$ \\
-A2 (post-pool $r{=}1$) & $0.790$ & $0.176$ & $0.766$ & $[0.717, 0.863]$ \\
-A3 (post-pool $r{=}2$) & $0.775$ & $0.169$ & $0.710$ & $[0.704, 0.847]$ \\
-A4 (LoRA $r{=}1$) & $0.803$ & $0.170$ & $0.760$ & $[0.732, 0.875]$ \\
-A5 (LoRA $r{=}2$) & $0.809$ & $0.179$ & $0.786$ & $[0.734, 0.884]$ \\
+A1 (head $+$ max replay) & $0.785$ & $0.177$ & $0.743$ & $[0.712, 0.859]$ \\
+A2 (post-pool $r{=}1$) & $0.792$ & $0.179$ & $0.763$ & $[0.717, 0.866]$ \\
+A3 (post-pool $r{=}2$) & $0.767$ & $0.180$ & $0.739$ & $[0.693, 0.844]$ \\
+A4 (LoRA $r{=}1$) & $0.810$ & $0.176$ & $0.777$ & $[0.737, 0.884]$ \\
+A5 (LoRA $r{=}2$) & $0.811$ & $0.179$ & $0.813$ & $[0.737, 0.886]$ \\
 \bottomrule
 \end{tabular}
 \end{table}

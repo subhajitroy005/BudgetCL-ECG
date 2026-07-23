@@ -6,7 +6,7 @@ deleted (spec rule #6).
 
 | Superseded file | Replaced by | Reason | Date |
 |---|---|---|---|
-| _(none yet)_ | | | |
+| `results/primary/E7_arm_summary.csv` | `results/primary/E7_arm_summary_median.csv` | descriptive aggregation did not match locked plan (§4.2.2): released summary reduces seeds within patient by **mean** (`run_statistics.py:71`); locked plan reduces by **median**. New file uses `mean_of_medians`. | 2026-07-22 |
 
 ## T1 fit check (spec §3.3 Step 4)
 

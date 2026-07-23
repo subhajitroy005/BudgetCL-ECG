@@ -1,0 +1,9 @@
+key,value,source_file,source_locator
+A0_per_patient_macro_f1,0.666,results/primary/E7_arm_summary_median.csv,A0 macro_f1_mean_of_medians
+A1_max_head_only_replay,0.785,results/primary/E7_arm_summary_median.csv,A1 macro_f1_mean_of_medians
+A4_rank1_encoder_lora,0.810,results/primary/E7_arm_summary_median.csv,A4 macro_f1_mean_of_medians
+A5_rank2_encoder_lora,0.811,results/primary/E7_arm_summary_median.csv,A5 macro_f1_mean_of_medians
+A4_patients_improved_vs_A0,16 of 21,results/r0_estimator_matrix.csv,median-within improved count
+A5_patients_improved_vs_A0,16 of 21,results/r0_estimator_matrix.csv,median-within improved count
+A1_patients_improved_vs_A0,12 of 21,results/r0_estimator_matrix.csv,median-within improved count
+A4_patients_improved_vs_A1,14 of 21,results/r0_estimator_matrix.csv,median-within improved count

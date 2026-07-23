@@ -91,13 +91,25 @@ dominated by the $66\times128 = 8{,}448$-element feed-forward tensor and its
 gradient: $154.6\kib$ naive FP32, $77.3\kib$ at batch-1 FP16, and $41.3\kib$
 under batch-1 FP16 with block rematerialisation (compute multiplier
 $1.99\times$ forward FLOPs). That is a $\sim$300$\times$ asymmetry on the
-excluded axis. It does not vanish under rematerialisation, but it is largely
-\emph{aliasable}: the frozen-model inference arena is itself $33.0\kib$ at FP16
-(it holds the same feed-forward tensor), so the encoder arms' adaptation
-transient is only $\approx1.25\times$ the arena the device already reserves.
-The residual charge beyond inference is the feed-forward-hidden gradient. We
-report all three regimes rather than the single most favourable one; the full
-per-arm, per-regime table is in Appendix~\ref{sec:embedded} and the source is
+excluded axis. It does not vanish under rematerialisation, but it is partly
+\emph{aliasable} onto the inference arena, and how much depends on the precision
+one compares against. We state both ratios rather than only the flattering one.
+\emph{Element-for-element (topology).} The rematerialised adaptation working set
+is $21{,}156$ live elements against the frozen forward pass's $16{,}896$, so
+adaptation needs only $\approx\!1.25\times$ as many live elements as inference
+already touches; at matched FP16 precision the inference arena is $33.0\kib$ and
+the adaptation transient $41.3\kib$, the same $1.25\times$. \emph{Deployed
+reality.} A device that ships this classifier runs \emph{inference} at INT8---the
+replay buffer is stored INT8 for exactly this reason
+(\texttt{replay\_precision=int8})---so the INT8 arena it actually provisions is
+$16{,}896\bytes$ ($16.5\kib$), whereas an adaptation step runs at FP16 and peaks
+at $42{,}312\bytes$ ($41.3\kib$): a firmware architect pays
+$\mathbf{2.50\times}$ the deployed inference arena, not $1.25\times$. The
+residual charge beyond the INT8 arena is the FP16 feed-forward-hidden gradient.
+Claiming only the $1.25\times$ figure would understate what the two-axis analysis
+exists to expose. We report all three regimes rather than the single most
+favourable one; the full per-arm, per-regime table is in
+Appendix~\ref{sec:embedded} and the source is
 \texttt{results/e6\_two\_axis\_accounting.csv}.
 
 

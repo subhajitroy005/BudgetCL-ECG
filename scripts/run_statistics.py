@@ -30,7 +30,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from statistics import (  # noqa: E402
+from budget_stats import (  # noqa: E402
     PRESPECIFIED_FAMILY,
     holm_correct,
     paired_bootstrap_ci,
